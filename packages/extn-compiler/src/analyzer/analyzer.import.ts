@@ -1,90 +1,53 @@
 import { NodePath } from "@babel/traverse";
 import * as T from "@babel/types";
 import { resolveNodeId } from "../utils/id-resolver";
-import { basename, dirname, join } from "node:path";
 import Scanner from "../scanner";
-import fs from 'node:fs';
-import { fileURLToPath } from "url";
 import Graph from "../graph";
-import { NodeObserver } from "../parser";
 import { FileTypes } from "@extn/shared";
+import { ImportResolver } from "../import-resolver";
 
 // TODO: Talvez seja melhor fazer o scanModule retornar a lista de symbols encontrados no arquivo
 
 export class ImportAnalyzer {
-	constructor(private observers: NodeObserver, private graph: Graph, private scanner: Scanner) {}
+	resolver = new ImportResolver();
 	
-	async analyzeTypeDeclaration(path: string, node: NodePath<T.TSTypeReference>) {
-		const typeName = resolveNodeId(node.get("typeName")).node.name;
-		const binding = node.scope.getBinding(typeName);
+	constructor(private graph: Graph, private scanner: Scanner) {}
+	
+	async analyzeTypeDeclaration(path: NodePath<T.TSTypeReference>) {
+		const typeName = resolveNodeId(path.get("typeName")).node.name;
+		const binding = path.scope.getBinding(typeName);
 
-		await this.analyzeBinding(path, binding?.path);
+		await this.analyzeBinding(binding?.path);
 
-		return this.graph.findSymbol({ id: typeName, path });
+		const symbols = this.graph.getSymbolsByModule(path.node.loc!.filename)
+
+		return symbols.find(s => s.id == typeName);
 	}
 
-	analyzeBinding(path: string, node?: NodePath<T.Node>) {
-		switch (node?.node.type) {
+	analyzeBinding(path?: NodePath<T.Node>) {
+		switch (path?.node.type) {
 			case "ImportDefaultSpecifier":
 			case "ImportSpecifier":
-				return this.analyzeSpecifier(path, node);
+				return this.analyzeSpecifier(path as NodePath<
+					| T.ImportDefaultSpecifier
+					| T.ImportSpecifier
+				>);
 		}
 	}
 
-	async analyzeSpecifier(path: string, specifier: NodePath<T.ImportSpecifier | T.ImportDefaultSpecifier>) {
-		const importDecl = specifier.parentPath as NodePath<T.ImportDeclaration>;
-		const targetPath = importDecl.node.source.value;
+	async analyzeSpecifier(spec: NodePath<T.ImportSpecifier | T.ImportDefaultSpecifier>) {
+		const decl = spec.parentPath.node as T.ImportDeclaration;
+		const source = decl.source.value;
+		const fromFile = spec.node.loc?.filename ?? "";
 
-		const basePath = dirname(path);
+		const resolved = await this.resolver.resolve(source, fromFile);
 
-		if(targetPath.startsWith('.')) {
-			await this.analyzeRelativePath(basePath, targetPath);
+		if (resolved.kind === "file") {
+			return this.scanner.scanFile(resolved.path, FileTypes.Service);
 		}
-		else {
-			await this.analyzePackage(targetPath);
+
+		if (resolved.kind === "module") {
+			return this.scanner.scanModule(resolved.root);
 		}
-	}
-
-	async analyzeRelativePath(basePath: string, targetPath: string) {
-		let fullPath = join(basePath, targetPath);
-
-		if(!/\.\w+$/.test(fullPath)) fullPath = await this.resolveExtension(fullPath);
-		
-		await this.scanner.scanFile(fullPath, FileTypes.Service);
-	}
-
-	private async resolveExtension(path: string) {
-		const basePath = dirname(path);
-		const fileName = basename(path);
-		const files = await fs.promises.readdir(basePath);
-
-		const file = files.find(f => f === fileName || f.startsWith(fileName + "."));
-
-		// TODO: Melhorar esse erro
-		if(!file) throw new Error('Unkown file');
-
-		return join(basePath, file);
-	}
-
-	async analyzePackage(targetPath: string) {
-		const fullPath = this.importResolve(targetPath);
-		let dirPath = await this.findWorkspacePath(fullPath);
-
-		await this.scanner.scanModule(dirPath);
-	}
-
-	private importResolve(path: string) {
-		const mod = import.meta.resolve(path);
-
-		return fileURLToPath(mod);
-	}
-
-	private async findWorkspacePath(path: string): Promise<string> {
-		const dir = dirname(path);
-		const files = await fs.promises.readdir(dir).catch(() => [] as string[]);
-
-		const isRoot = files.includes('package.json');
-
-		return isRoot ? dir : await this.findWorkspacePath(dir);
 	}
 }

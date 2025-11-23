@@ -1,36 +1,26 @@
-import { CommandTransformer } from "./transformer.command";
-import { ServiceTransformer } from "./transformer.service";
+import * as T from '@babel/types';
 import Graph from "../graph";
 import Analyzer from "../analyzer";
-import CodeGenerator from "../codegen";
 import Scanner from "../scanner";
 import Parser from "../parser";
+import { CommandTransformer } from "./transformer.command";
+import { ServiceTransformer } from "./transformer.service";
+import { FileTypes } from '@extn/shared';
 
 class Transformer {
-	private parser = new Parser();
-	private analyzer: Analyzer;
-	private codegen: CodeGenerator;
+	private services: ServiceTransformer;
+	private commands: CommandTransformer;
 
-	async transformService(path: string, source: string) {
-		const ast = await this.parser.parseService(path, source);
-		
-		source = this.codegen.generateCode(ast);
-
-		this.graph.addFile(path, source);
+	constructor(private graph: Graph, scanner: Scanner, parser: Parser) {
+		this.commands = new CommandTransformer(this.analyzer);
+		this.services = new ServiceTransformer(this.analyzer);
 	}
 
-	async transformCommand(path: string, code: string) {
-		const ast = await this.parser.parseCommand(path, code);
-
-		this.graph.addCommand(ast);
-	}
-
-	constructor(private graph: Graph, scanner: Scanner) {
-		this.codegen = new CodeGenerator(graph);
-		this.analyzer = new Analyzer(this.graph, scanner, this.parser);
-		const observer = this.parser.observe();
-		new CommandTransformer(observer);
-		new ServiceTransformer(observer, graph, this.analyzer);
+	transform(type: FileTypes, ast: T.File) {
+		return {
+			[FileTypes.Command]: () => this.commands.transform(ast),
+			[FileTypes.Service]: () => this.services.transform(ast)
+		}[type]();
 	}
 }
 

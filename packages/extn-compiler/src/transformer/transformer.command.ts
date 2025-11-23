@@ -1,17 +1,26 @@
 import * as T from '@babel/types';
-import { NodeObserver, ObserverContext } from '../parser';
-import { FileTypes } from '@extn/shared';
-import { ObserveNode } from '../utils/decorators';
+import CommandAnalyzer, { InstructionKind } from '../analyzer/analyzer.command';
+import { NodePath } from '@babel/traverse';
 
 export class CommandTransformer {
-	constructor(observer: NodeObserver) {}
+	private analyzer = new CommandAnalyzer();
 
-	@ObserveNode("ImportDeclaration")
-	transformImport({ node, type }: ObserverContext<T.ImportDeclaration>) {
-		if(type != FileTypes.Command) return;
-		
-		const source = node.node.source.value;
-		const specifiers = node.node.specifiers;
+	transform(ast: T.File) {
+		const instructions = this.analyzer.analyze(ast);
+
+		const map = {
+			[InstructionKind.Import]: this.transformImport,
+			[InstructionKind.ExportDefault]: this.transformExportDefault,
+		};
+
+		for (const instruction of instructions) {
+			map[instruction.kind].bind(this, instruction.value);
+		}
+	}
+
+	transformImport(path: NodePath<T.ImportDeclaration>) {
+		const source = path.node.source.value;
+		const specifiers = path.node.specifiers;
 
 		const importExpressions = specifiers.map(specifier => {
 			if (T.isImportDefaultSpecifier(specifier)) {
@@ -39,13 +48,25 @@ export class CommandTransformer {
 			}
 		});
 
-		node.replaceWithMultiple(importExpressions as any);
+		path.replaceWithMultiple(importExpressions as any);
 	}
 
-	@ObserveNode("ExportDefaultDeclaration")
-	transformExportDefault({ node, type }: ObserverContext<T.ExportDefaultDeclaration>) {
-		if(type != FileTypes.Command) return;
+	transformExportDefault(path: NodePath<T.ExportDefaultDeclaration>) {
+		const parent = path.parentPath as NodePath<T.Program>;
 
-		node.replaceWith(T.returnStatement(node.node.declaration as T.Expression));
+		path.replaceWith(
+			T.returnStatement(path.node.declaration)
+		);
+
+		parent.replaceWith(
+			T.callExpression(
+				T.functionExpression(
+					null,
+					[],
+					T.blockStatement(parent.node.body)
+				),
+				[]
+			)
+		);
 	}
 }
