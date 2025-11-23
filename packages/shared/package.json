@@ -4,6 +4,9 @@
 	"type": "module",
 	"main": "./lib/index.js",
 	"types": "./src/index.ts",
+	"scripts": {
+		"build": "tsup"
+	},
 	"devDependencies": {
 		"@babel/traverse": "*"
 	}
