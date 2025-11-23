@@ -1,130 +1,49 @@
 import * as T from '@babel/types';
 import { NodePath } from "@babel/traverse"
-import { resolveNodeId } from "./utils/id-resolver"
+import { resolveNodeId } from "./utils/id-resolver.ts"
 
-class Event {
-	constructor(
-		public symbol: GraphSymbol,
-		public type: string,
-		public once: boolean
-	) { }
-
-	toAST() {
-		return T.objectExpression([
-			T.objectProperty(T.identifier("type"), T.stringLiteral(this.type)),
-			T.objectProperty(T.identifier("once"), T.booleanLiteral(this.once)),
-			T.objectProperty(T.identifier("handler"), T.stringLiteral(this.symbol.id)),
-			T.objectProperty(
-				T.identifier("entity"),
-				T.identifier(this.symbol.parent?.id ?? "undefined")
-			)
-		]);
-	}
-
-	getSymbols() {
-		return this.symbol.parent ? [this.symbol.parent] : [];
-	}
+interface Event {
+	symbol: GraphSymbol
+	type: string
+	once: boolean
 }
 
-
-class Route {
-	constructor(
-		public endpoint: string,
-		public method: string,
-		public symbol: GraphSymbol,
-		public ipc: boolean
-	) { }
-
-	toAST() {
-		return T.objectExpression([
-			T.objectProperty(T.identifier("endpoint"), T.stringLiteral(this.endpoint)),
-			T.objectProperty(T.identifier("method"), T.stringLiteral(this.method)),
-			T.objectProperty(T.identifier("ipc"), T.booleanLiteral(this.ipc)),
-			T.objectProperty(T.identifier("handler"), T.stringLiteral(this.symbol.id)),
-			T.objectProperty(T.identifier("entity"), T.identifier(this.symbol.parent?.id ?? "undefined"))
-		])
-	}
-
-	getSymbols() {
-		return this.symbol.parent ? [this.symbol.parent] : [];
-	}
+interface Route {
+	endpoint: string
+	method: string
+	symbol: GraphSymbol
+	ipc: boolean
 }
 
-class Service {
-	constructor(
-		public symbol: GraphSymbol,
-		public dependencies: GraphSymbol[]
-	) { }
-
-	toAST() {	
-		return T.objectExpression([
-			T.objectProperty(T.identifier("service"), T.identifier(this.symbol.id)),
-			T.objectProperty(
-				T.identifier("dependencies"),
-				T.arrayExpression(this.dependencies.map(d => T.identifier(d.id)))
-			)
-		]);
-	}
-
-	getSymbols() {
-		return [this.symbol, ...this.dependencies];
-	}
+interface Service {
+	symbol: GraphSymbol
+	dependencies: GraphSymbol[]
 }
 
-class Injectable {
-	constructor(
-		public symbol: GraphSymbol,
-		public dependencies: GraphSymbol[]
-	) { }
-
-	toAST() {
-		return T.objectExpression([
-			T.objectProperty(T.identifier("injectable"), T.identifier(this.symbol.id)),
-			T.objectProperty(
-				T.identifier("dependencies"),
-				T.arrayExpression(this.dependencies.map(d => T.identifier(d.id)))
-			)
-		]);
-	}
-
-	getSymbols() {
-		return [this.symbol, ...this.dependencies];
-	}
+interface Injectable {
+	symbol: GraphSymbol;
+	dependencies: GraphSymbol[];
 }
 
-class Module {
-	constructor(
-		public name: string,
-		public managers: GraphSymbol[]
-	) { }
-
-	toAST() {
-		return T.objectExpression([
-			T.objectProperty(T.identifier("name"), T.stringLiteral(this.name)),
-			T.objectProperty(T.identifier("managers"), T.arrayExpression(this.managers.map(m => T.identifier(m.id))))
-		]);
-	}
-
-	getSymbols() {
-		return [...this.managers];
-	}
+interface Module {
+	name: string
+	managers: GraphSymbol[]
 }
 
 export interface GraphSymbol {
 	kind: string
 	id: string
-	node: NodePath
-	path: string
+	path: NodePath
 	parent?: GraphSymbol
 }
 
 /** @internal */
 class Graph {
-	private symbolsByModule = new Map<string, Set<WeakRef<GraphSymbol>>>();
+	private symbolsByFile = new Map<string, Set<WeakRef<GraphSymbol>>>();
 	private symbolsByKey = new Map<string, WeakRef<GraphSymbol>>();
 
 	private getSymbolKey(symbol: GraphSymbol): string {
-		return `${symbol.node}:${symbol.id}`;
+		return `${symbol.path}:${symbol.id}`;
 	}
 
 	// fix: resolver o symbol node
@@ -133,10 +52,10 @@ class Graph {
 		const key = this.getSymbolKey(symbol);
 		this.symbolsByKey.set(key, new WeakRef(symbol));
 
-		let set = this.symbolsByModule.get(symbol.node);
+		let set = this.symbolsByFile.get(symbol.node);
 		if (!set) {
 			set = new Set();
-			this.symbolsByModule.set(symbol.node, set);
+			this.symbolsByFile.set(symbol.node, set);
 		}
 		set.add(new WeakRef(symbol));
 		return symbol;
@@ -170,7 +89,7 @@ class Graph {
 	}
 
 	getSymbolsByModule(path: string) {
-		const set = this.symbolsByModule.get(path);
+		const set = this.symbolsByFile.get(path);
 		if (!set) return [];
 
 		const validSymbols: GraphSymbol[] = [];
@@ -184,7 +103,7 @@ class Graph {
 	}
 
 	findSymbol(opts: { path: string, id: string }) {
-		const set = this.symbolsByModule.get(opts.path);
+		const set = this.symbolsByFile.get(opts.path);
 		if (!set) return null;
 
 		for (const ref of set) {
@@ -194,54 +113,73 @@ class Graph {
 		return null;
 	}
 
-	_injectables = new Set<Injectable>;
+	private fileByPath = new Map<string, string>;
 
-	get injectables(): Readonly<Set<Injectable>> {
-		return this._injectables;
+	addFile(path: string, value: string) {
+		this.fileByPath.set(path, value);
+	}
+
+	getFile(path: string) {
+		return this.fileByPath.get(path)!;
+	}
+
+	private _injectables = new Array<Injectable>;
+
+	get injectables() {
+		return Object.freeze([...this._injectables]);
 	}
 
 	addInjectable(symbol: GraphSymbol, dependencies: GraphSymbol[]) {
-		this._injectables.add(new Injectable(symbol, dependencies));
+		this._injectables.push({ symbol, dependencies });
 	}
 
-	private _services = new Set<Service>;
+	private _services = new Array<Service>;
 
-	get services(): Readonly<Set<Service>> {
-		return this._services;
+	get services() {
+		return Object.freeze([...this._services]);
 	}
 
 	addService(symbol: GraphSymbol, dependencies: GraphSymbol[]) {
-		this._services.add(new Service(symbol, dependencies));
+		this._services.push({ symbol, dependencies });
 	}
 
-	private _routes = new Set<Route>;
+	private _routes = new Array<Route>;
 
-	get routes(): Readonly<Set<Route>> {
-		return this._routes;
+	get routes() {
+		return Object.freeze([...this._routes]);
 	}
 
 	addRoute(route: Pick<Route, 'symbol' | 'endpoint' | 'ipc' | 'method'>) {
-		this._routes.add(new Route(route.endpoint, route.method, route.symbol, route.ipc));
+		this._routes.push({ 
+			endpoint: route.endpoint, 
+			method: route.method, 
+			symbol: route.symbol, 
+			ipc: route.ipc
+		});
 	}
 
-	private _events = new Set<Event>;
+	private _events = new Array<Event>;
 
-	get events(): Readonly<Set<Event>> {
-		return this._events;
+	get events() {
+		return Object.freeze([...this._events]);
 	}
 
 	addEvent(event: Pick<Event, 'symbol' | 'type' | 'once'>) {
-		this._events.add(new Event(event.symbol, event.type, event.once));
+		this._events.push({ 
+			symbol: event.symbol, 
+			type: event.type, 
+			once: event.once
+		});
 	}
 
-	private _commands = new Set<NodePath<T.Program>>();
+	private _commands = new Array<T.File>();
 
-	get commands(): Readonly<Set<NodePath<T.Program>>> {
-		return this._commands;
+	get commands() {
+		return Object.freeze([...this._commands]);
 	}
 
-	addCommand(command: NodePath<T.Program>) {
-		this._commands.add(command);
+	addCommand(command: T.File) {
+		this._commands.push(command);
 	}
 
 	private _modules = new Set<Module>();
@@ -251,7 +189,7 @@ class Graph {
 	}
 
 	addModule(moduleData: Pick<Module, 'name' | 'managers'>) {
-		this._modules.add(new Module(moduleData.name, moduleData.managers));
+		this._modules.add({ name: moduleData.name, managers: moduleData.managers });
 	}
 }
 

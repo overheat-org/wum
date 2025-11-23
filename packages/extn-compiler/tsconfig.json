@@ -1,0 +1,14 @@
+{
+	"compilerOptions": {
+		"noEmit": true,
+		"module": "esnext",
+		"lib": ["ESNext"],
+		"target": "esnext",
+		"moduleResolution": "bundler",
+		"esModuleInterop": true,
+		"strict": true,
+		"noImplicitAny": false,
+		"allowImportingTsExtensions": true,
+	},
+	"include": ["./src/**/*"]
+}

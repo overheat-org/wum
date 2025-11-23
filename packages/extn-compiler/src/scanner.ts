@@ -5,12 +5,17 @@ import Graph from "./graph";
 import Transformer from "./transformer";
 import BridgePlugin from "./plugin";
 import { FileTypes } from "@extn/shared";
+import Parser from "./parser";
+import CodeGenerator from "./codegen";
 
 class Scanner {
+	constructor(private codegen: CodeGenerator) {}
+	
 	private graph = new Graph();
-    private configManager = new ConfigManager();
-	private transformer = new Transformer(this.graph, this);
-	private transformMap: Record<FileTypes, (path: string, source: string) => Promise<void>>
+	private parser = new Parser();
+	private configManager = new ConfigManager();
+	private transformer = new Transformer(this.graph, this, this.parser);
+	private limit = createLimit(8);
 
 	async scanRootModule(path: string) {
 		const config = await this.configManager.resolve(path);
@@ -38,24 +43,65 @@ class Scanner {
 
 	async scanGlob(pattern: string, opts: { type: FileTypes, cwd: string }) {
 		for await (const path of fs.glob(pattern, { cwd: opts.cwd })) {
-			await this.scanFile(j(opts.cwd, path), opts.type);
+			await this.limit(() =>
+                this.scanFile(j(opts.cwd, path), opts.type)
+            );
 		}
 	}
-	
+
+	private scanCache = new Array<string>;
+
 	async scanFile(path: string, type: FileTypes) {
+		if(this.scanCache.includes(path)) return
+		this.scanCache.push(path);
+
+		const source = await this.readFile(path);
+		const ast = this.parser.parse(path, source);
+		this.transformer.transform(type, ast);
+
+		if(type == FileTypes.Command) {
+			this.graph.addCommand(ast);
+		}
+
+		if(type == FileTypes.Service) {
+			const content = this.codegen.generateCode(ast);
+			this.graph.addFile(path, content);
+		}
+	}
+
+	private readCache = new Map<string, string>;
+
+	private async readFile(path: string) {
+		if(this.readCache.has(path)) return this.readCache.get(path)!;
+
 		const source = await fs.readFile(path, 'utf-8');
 
-		const transform = this.transformMap[type].bind(this.transformer);
+		this.readCache.set(path, source);
 
-		await transform(path, source);
-	}
-
-	constructor() {
-		this.transformMap = {
-			[FileTypes.Command]: this.transformer.transformCommand,
-			[FileTypes.Service]: this.transformer.transformService
-		}
+		return source;
 	}
 }
 
 export default Scanner;
+
+function createLimit(max: number) {
+    let active = 0;
+    const queue: (() => void)[] = [];
+
+    const next = () => {
+        active--;
+        queue.shift()?.();
+    };
+
+    return async <T>(fn: () => Promise<T>): Promise<T> => {
+        if (active >= max) {
+            await new Promise<void>(r => queue.push(r));
+        }
+        active++;
+        try {
+            return await fn();
+        } finally {
+            next();
+        }
+    };
+}

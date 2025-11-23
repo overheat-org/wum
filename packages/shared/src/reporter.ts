@@ -3,15 +3,14 @@ import type { NodePath } from "@babel/traverse";
 export type ExtnErrorLocation = { path?: string, line?: number, column?: number }
 
 export class ExtnError extends Error {
-	constructor(message: string, location?: ExtnErrorLocation) {
-		if (location) message += `\n    at ${location.path}:${location.line}:${location.column}`;
+	name = "ExtnError"
+	
+	constructor(message: string, path?: NodePath) {
+		const { loc } = path?.node ?? {};
+		const { line, column } = loc?.start ?? {};
+
+		if (loc) message += `\n    at ${loc.filename}:${line}:${column}`;
 		super(message);
 		Error.captureStackTrace?.(this, ExtnError);
 	}
-}
-
-/** @internal */
-export function getErrorLocation(path: NodePath, id: string): ExtnErrorLocation {
-    const loc = path?.node?.loc?.start;
-    return { ...(loc ?? {}), path: id };
 }

@@ -1,10 +1,12 @@
 {
 	"name": "@extn/compiler",
 	"type": "module",
+	"version": "0.5.0",
 	"main": "lib/index.js",
 	"types": "src/index.ts",
 	"scripts": {
-		"build": "tsup"
+		"build": "tsup",
+		"test": "tsx --test \"src/**/__test__/**/*.js\""
 	},
 	"dependencies": {
 		"@extn/shared": "workspace:*",
