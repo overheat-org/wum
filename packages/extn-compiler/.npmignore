@@ -3,3 +3,4 @@ src
 .gitignore
 .npmignore
 tsup.config.ts
+__test__
