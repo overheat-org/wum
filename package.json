@@ -12,5 +12,8 @@
 	},
 	"workspaces": [
 		"packages/*"
-	]
+	],
+	"devDependencies": {
+		"tsx": "^4.20.6"
+	}
 }
