@@ -14,5 +14,5 @@ export const autoincrement = async (type: string) => {
     const curr = ((await (_incremental ??= new Storage<number>(INCREMENT_NAMESPACE)).get(type)) ?? 0) + 1;
     await _incremental.set(type, curr);
 
-    return { num: curr, str: curr.toString() }
+    return curr;
 };

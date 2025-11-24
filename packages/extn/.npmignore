@@ -3,3 +3,4 @@ node_modules
 .gitignore
 tsup.config.ts
 .npmignore
+__test__

@@ -20,11 +20,11 @@ function BridgePlugin(graph: Graph) {
 		resolveId(id) {
 			return id;
 		},
-		async load(id) {
+		async load(path) {
 			return {
 				'virtual:index': codegen.generateIndex(),
 				'virtual:manifest': codegen.generateManifest(),
-			}[id] ?? graph.getModule(id);
+			}[path] ?? graph.getFile(path);
 		},
 	} satisfies Plugin;
 }

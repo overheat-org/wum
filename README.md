@@ -2,7 +2,7 @@
   	<img 
 		alt="Wum logo" 
 		src="https://raw.githubusercontent.com/overheat-org/wum/main/assets/logo.svg"
-		height="100"
+		height="200"
 	>
 	<h1>Wum</h1>
 	<p>Thinking...</p>

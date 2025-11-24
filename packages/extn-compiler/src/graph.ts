@@ -2,30 +2,35 @@ import * as T from '@babel/types';
 import { NodePath } from "@babel/traverse"
 import { resolveNodeId } from "./utils/id-resolver.ts"
 
-interface Event {
+export interface Event {
+	kind: "event"
 	symbol: GraphSymbol
 	type: string
 	once: boolean
 }
 
-interface Route {
+export interface Route {
+	kind: "route"
 	endpoint: string
 	method: string
 	symbol: GraphSymbol
 	ipc: boolean
 }
 
-interface Service {
+export interface Service {
+	kind: "service"
 	symbol: GraphSymbol
 	dependencies: GraphSymbol[]
 }
 
-interface Injectable {
+export interface Injectable {
+	kind: "injectable"
 	symbol: GraphSymbol;
 	dependencies: GraphSymbol[];
 }
 
-interface Module {
+export interface Module {
+	kind: "module"
 	name: string
 	managers: GraphSymbol[]
 }
@@ -130,7 +135,7 @@ class Graph {
 	}
 
 	addInjectable(symbol: GraphSymbol, dependencies: GraphSymbol[]) {
-		this._injectables.push({ symbol, dependencies });
+		this._injectables.push({ kind: "injectable", symbol, dependencies });
 	}
 
 	private _services = new Array<Service>;
@@ -140,7 +145,7 @@ class Graph {
 	}
 
 	addService(symbol: GraphSymbol, dependencies: GraphSymbol[]) {
-		this._services.push({ symbol, dependencies });
+		this._services.push({ kind: "service", symbol, dependencies });
 	}
 
 	private _routes = new Array<Route>;
@@ -150,7 +155,8 @@ class Graph {
 	}
 
 	addRoute(route: Pick<Route, 'symbol' | 'endpoint' | 'ipc' | 'method'>) {
-		this._routes.push({ 
+		this._routes.push({
+			kind: "route",
 			endpoint: route.endpoint, 
 			method: route.method, 
 			symbol: route.symbol, 
@@ -165,7 +171,8 @@ class Graph {
 	}
 
 	addEvent(event: Pick<Event, 'symbol' | 'type' | 'once'>) {
-		this._events.push({ 
+		this._events.push({
+			kind: "event",
 			symbol: event.symbol, 
 			type: event.type, 
 			once: event.once
@@ -189,7 +196,7 @@ class Graph {
 	}
 
 	addModule(moduleData: Pick<Module, 'name' | 'managers'>) {
-		this._modules.add({ name: moduleData.name, managers: moduleData.managers });
+		this._modules.add({ kind: "module", name: moduleData.name, managers: moduleData.managers });
 	}
 }
 
