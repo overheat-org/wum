@@ -1,4 +1,4 @@
-export const Logger = {
+const Logger = {
 	startup(version: string) {
 		console.log(`   ☯ \x1b[1mWum\x1b[0mCord ${version}\n`);
 	},
@@ -11,3 +11,5 @@ export const Logger = {
 		console.log(`\x1b[33m⚠ Warning |\x1b[0m ${text}`);
 	}
 }
+
+export default Logger;

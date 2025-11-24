@@ -1,0 +1,12 @@
+{
+	"name": "@wum/cli",
+	"version": "0.1.0",
+	"type": "module",
+	"scripts": {
+		"build": "tsup"
+	},
+	"bin": "out/index.js",
+	"dependencies": {
+		"@wum/compiler": "workspace:*"
+	}
+}

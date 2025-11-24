@@ -1,9 +1,9 @@
 import type { NodePath } from "@babel/traverse";
 
-export type ExtnErrorLocation = { path?: string, line?: number, column?: number }
+export type WumErrorLocation = { path?: string, line?: number, column?: number }
 
-export class ExtnError extends Error {
-	name = "ExtnError"
+export class WumError extends Error {
+	name = "WumError"
 	
 	constructor(message: string, path?: NodePath) {
 		const { loc } = path?.node ?? {};
@@ -11,6 +11,6 @@ export class ExtnError extends Error {
 
 		if (loc) message += `\n    at ${loc.filename}:${line}:${column}`;
 		super(message);
-		Error.captureStackTrace?.(this, ExtnError);
+		Error.captureStackTrace?.(this, WumError);
 	}
 }

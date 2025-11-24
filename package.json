@@ -1,5 +1,5 @@
 {
-	"name": "@extn/extn",
+	"name": "@wum/wum",
 	"private": true,
 	"dependencies": {
 		"@babel/generator": "^7.28.5",

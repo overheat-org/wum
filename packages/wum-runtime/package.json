@@ -1,13 +1,15 @@
 {
-	"name": "@wum/shared",
-	"version": "0.1.0",
+	"name": "@wum/runtime",
 	"type": "module",
 	"main": "./lib/index.js",
 	"types": "./src/index.ts",
 	"scripts": {
 		"build": "tsup"
 	},
+	"dependencies": {
+		"@wum/shared": "workspace:*"
+	},
 	"devDependencies": {
-		"@babel/traverse": "*"
+		"wum.js": "workspace:*"
 	}
 }

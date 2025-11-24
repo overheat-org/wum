@@ -1,0 +1,20 @@
+{
+    "compilerOptions": {
+        "lib": [
+            "ESNext"
+        ],
+        "jsx": "preserve",
+        "jsxImportSource": "wum",
+        "baseUrl": "./",
+        "strictPropertyInitialization": false,
+        "paths": {
+            "@utils/*": [
+                "./src/utils/*"
+            ]
+        }
+    },
+    "include": [
+        "src/**/*",
+        "../types/**/*"
+    ]
+}
