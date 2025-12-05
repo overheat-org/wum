@@ -18,7 +18,7 @@ class CommandAnalyzer {
 		const result = new Array;
 		
 		const bindFn = (fn: (...args: any[]) => unknown, path: NodePath) => {
-			result.push(fn.bind(this, path));
+			result.push(fn.call(this, path));
 		}
 		
 		traverse(ast, {
