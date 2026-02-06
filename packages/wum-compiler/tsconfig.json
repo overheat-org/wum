@@ -9,6 +9,7 @@
 		"strict": true,
 		"noImplicitAny": false,
 		"allowImportingTsExtensions": true,
+		"sourceMap": true
 	},
 	"include": ["./src/**/*"]
 }

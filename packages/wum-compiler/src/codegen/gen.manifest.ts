@@ -1,7 +1,6 @@
 import * as T from '@babel/types';
 import Graph, { GraphSymbol, Route, Event, Service, Injectable, Module } from '../graph';
 import { ManifestType } from '@wum/shared';
-import { Config } from '../config';
 import path from 'path';
 
 type Item =
@@ -14,12 +13,12 @@ type Item =
 type Imports = [];
 
 class ManifestGenerator {
-	constructor(private graph: Graph, private config: Config) { }
+	constructor(private graph: Graph) { }
 
-	generate() {
+	generate(buildPath: string) {
 		const importsAcc = new Array<Imports>;
 		const obj = this.generateObject(importsAcc);
-		const imports = this.generateImports(importsAcc);
+		const imports = this.generateImports(importsAcc, buildPath);
 
 		const file = T.file(
 			T.program(
@@ -31,10 +30,10 @@ class ManifestGenerator {
 		return file;
 	}
 
-	generateImports(symbols: GraphSymbol[]) {
+	generateImports(symbols: GraphSymbol[], buildPath: string) {
 		return symbols.map(symbol => {
 			const id = T.identifier(symbol.id);
-			const p = path.resolve(this.config.buildPath, symbol.path.getPathLocation())
+			const p = path.resolve(buildPath, symbol.node.node.loc!.filename)
 
 			return T.importDeclaration(
 				[T.importSpecifier(id, id)],

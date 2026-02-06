@@ -1,5 +1,4 @@
 import { NodePath } from "@babel/traverse";
-import traverse from "../utils/traverse";
 import * as T from "@babel/types";
 import { WumError } from "@wum/shared";
 import { AnalyzerInstruction as BaseInstruction } from "./analyzer.dto";
@@ -14,14 +13,14 @@ export type AnalyzerInstruction =
 	| BaseInstruction<InstructionKind.ExportDefault, NodePath<T.ExportDefaultDeclaration>>;
 
 class CommandAnalyzer {
-	analyze(ast: T.File): AnalyzerInstruction[] {
+	analyze(ast: NodePath<T.File>): AnalyzerInstruction[] {
 		const result = new Array;
 		
 		const bindFn = (fn: (...args: any[]) => unknown, path: NodePath) => {
 			result.push(fn.call(this, path));
 		}
-		
-		traverse(ast, {
+
+		ast.traverse({
 			TSEnumDeclaration: p => bindFn(this.analyzeEnum, p),
 			ClassDeclaration: p => bindFn(this.analyzeClass, p),
 			ExportDefaultDeclaration: p => bindFn(this.analyzeExportDefault, p),

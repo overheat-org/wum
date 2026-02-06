@@ -9,7 +9,7 @@ export class WumClient extends Client {
         super(options);
 
         const entryUrl = dirname(options.entryUrl);
-		this.runtime = new Runtime(this, entryUrl);
+		this.runtime = new Runtime(this as any, entryUrl);
     }
 
     public async start(): Promise<string> {

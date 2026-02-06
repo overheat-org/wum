@@ -1,24 +1,21 @@
 {
-  "version": "0.2.0",
-  "configurations": [
-    {
-      "type": "node",
-      "request": "launch",
-      "name": "Launch and Debug with TypeScript",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}/src/cli.ts",  // Caminho para o arquivo JS gerado
-      "args": ["--enable-resource-management", ".", "--hot"],
-      "preLaunchTask": "Run test script",  // Script que roda antes do launch
-      "runtimeArgs": ["--inspect-brk"],  // Habilita o modo de depuração
-      "outFiles": [
-        "${workspaceFolder}/dist/**/*.js"  // Caminho para os arquivos JS gerados
-      ],
-      "sourceMaps": true, // Habilita o uso de source maps
-      "env": {
-        "NODE_ENV": "development"
-      },
-      "resolveSourceMapLocations": ["${workspaceFolder}/dist/**/*.js", "${workspaceFolder}/src/**/*"],
-      "cwd": "${workspaceFolder}/test",
-    }
-  ]
+	"version": "0.2.0",
+	"configurations": [
+		{
+			"type": "node",
+			"request": "launch",
+			"name": "[Compiler] Unit Tests",
+			"runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
+			"args": [
+				"--test",
+				"packages/wum-compiler/src/**/__test__/**/*.js"
+			],
+			"cwd": "${workspaceFolder}",
+			"console": "integratedTerminal",
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceFolder}/**/*.js"
+			]
+		}
+	]
 }

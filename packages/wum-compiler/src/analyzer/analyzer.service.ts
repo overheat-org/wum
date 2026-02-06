@@ -7,7 +7,6 @@ import { DependencyAnalyzer } from './analyzer.dependency';
 import Graph from '../graph';
 import { ImportAnalyzer } from './analyzer.import';
 import Scanner from '../scanner';
-import traverse from '../utils/traverse';
 
 export enum InstructionKind {
 	MacroDecorator,
@@ -45,27 +44,28 @@ class ServiceAnalyzer {
 	private dependencyAnalyzer: DependencyAnalyzer;
 	private macroAnalyzer: MacroAnalyzer;
 
-	constructor(graph: Graph, scanner: Scanner) {
+	constructor(private graph: Graph, scanner: Scanner) {
 		this.importAnalyzer = new ImportAnalyzer(graph, scanner);
 		this.dependencyAnalyzer = new DependencyAnalyzer(this.importAnalyzer);
 		this.macroAnalyzer = new MacroAnalyzer(this.dependencyAnalyzer, graph);
 	}
 	
-	analyze(ast: T.File): AnalyzerInstruction[] {
-		const result = new Array;
+	analyze(ast: NodePath<T.File>) {
+		const result = new Array<AnalyzerInstruction>;
 
 		const bindFn = (fn: (...args: any[]) => unknown, path: NodePath) => {
-			result.push(fn.bind(this, path));
+			const instruction = fn.call(this, path) as AnalyzerInstruction | undefined;
+			if(instruction) result.push(instruction);
 		}
 
-		traverse(ast, {
-			Decorator: p => bindFn(this.analyzeDecorator, p)
+		ast.traverse({
+			Decorator: p => bindFn(this.analyzeDecorator, p),
 		});
 
-		return result;
+		return Promise.all(result);
 	}
 
-	analyzeDecorator(path: NodePath<T.Decorator>): MacroDecorator | undefined {
+	async analyzeDecorator(path: NodePath<T.Decorator>): MacroDecorator | undefined {
 		const expr = path.get("expression") as NodePath<T.Expression>;
 
 		let rules = decoratorRules;
@@ -129,7 +129,7 @@ class ServiceAnalyzer {
 		}
 
 		if(macro) {
-			this.macroAnalyzer.analyze(macro);
+			await this.macroAnalyzer.analyze(macro);
 		}
 
 		return undefined;

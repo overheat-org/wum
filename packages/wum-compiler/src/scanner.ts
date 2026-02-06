@@ -3,24 +3,21 @@ import { join as j } from "node:path";
 import { ConfigManager } from "./config/config.manager";
 import Graph from "./graph";
 import Transformer from "./transformer";
-import BridgePlugin from "./plugin";
 import { FileTypes } from "@wum/shared";
 import Parser from "./parser";
 import CodeGenerator from "./codegen";
 
 class Scanner {
-	constructor(private codegen: CodeGenerator) {}
+	constructor(private codegen: CodeGenerator, private transformer: Transformer) {}
 	
 	private graph = new Graph();
-	private parser = new Parser();
+	private parser = new Parser(this.graph);
 	private configManager = new ConfigManager();
-	private transformer = new Transformer(this.graph, this, this.parser);
 	private limit = createLimit(8);
 
 	async scanRootModule(path: string) {
 		const config = await this.configManager.resolve(path);
 
-		(config.vite!.plugins ??= []).unshift(BridgePlugin(this.graph));
 		const basePath = j(path, config.entryPath);
 
 		await Promise.all([
@@ -57,7 +54,7 @@ class Scanner {
 
 		const source = await this.readFile(path);
 		const ast = this.parser.parse(path, source);
-		this.transformer.transform(type, ast);
+		await this.transformer.transform(type, ast);
 
 		if(type == FileTypes.Command) {
 			this.graph.addCommand(ast);

@@ -1,7 +1,7 @@
 class IndexGenerator {
 	generate() {
 		return `
-			import { WumClient } from 'wum';
+			import { WumClient } from 'wum.js';
 
 			process.env = {
 				...process.env,

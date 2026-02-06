@@ -3,6 +3,7 @@ import { InstructionKind, MacroDecorator } from '../analyzer/analyzer.dto';
 import ServiceAnalyzer from '../analyzer/analyzer.service';
 import Graph from '../graph';
 import Scanner from '../scanner';
+import { NodePath } from '@babel/traverse';
 
 export class ServiceTransformer {
 	private analyzer: ServiceAnalyzer;
@@ -11,8 +12,8 @@ export class ServiceTransformer {
 		this.analyzer = new ServiceAnalyzer(graph, scanner);
 	}
 
-	transform(ast: T.File) {
-		const instructions = this.analyzer.analyze(ast);
+	async transform(ast: NodePath<T.File>) {
+		const instructions = await this.analyzer.analyze(ast);
 		
 		const map = {
 			[InstructionKind.MacroDecorator]: this.transformMacroDecorator

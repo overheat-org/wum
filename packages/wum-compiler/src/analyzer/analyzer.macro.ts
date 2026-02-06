@@ -1,4 +1,4 @@
-import { WumError } from "@wum/shared";
+import { throw_expr, WumError } from "@wum/shared";
 import Graph from "../graph";
 import { DependencyAnalyzer } from "./analyzer.dependency";
 import { DecoratorType, MacroDecorator } from "./analyzer.dto";
@@ -12,24 +12,25 @@ class MacroAnalyzer {
 			event: this.analyzeEvent
 		}
 
-		map[ctx.schema.name as keyof typeof map](ctx as any);
+		await map[ctx.schema.name as keyof typeof map]?.call(this, ctx as any);
 	}
 
 	async analyzeInjectable(ctx: MacroDecorator<DecoratorType.Class>) {
 		const dependencies = await this.dependencyAnalyzer.analyzeClass(ctx.target);
-		const symbol = this.graph.resolveSymbol(ctx.decorator);
+		const symbol = this.graph.resolveSymbol(ctx.target);
 		this.graph.addInjectable(symbol, dependencies);
 	}
 
 	async analyzeService(ctx: MacroDecorator<DecoratorType.Class>) {
 		const dependencies = await this.dependencyAnalyzer.analyzeClass(ctx.target);
-		const symbol = this.graph.resolveSymbol(ctx.decorator);
+		const symbol = this.graph.resolveSymbol(ctx.target);
 		this.graph.addService(symbol, dependencies);
 	}
 
 	analyzeHttp(ctx: MacroDecorator<DecoratorType.Method>) {
 		const [routeParam] = ctx.params;
 
+		// TODO: mk right errors here	
 		if(!routeParam) throw "";
 		if (!routeParam.isStringLiteral()) throw "";
 
@@ -52,8 +53,6 @@ class MacroAnalyzer {
 
 		const key = ctx.target.get('key');
 		if (!key.isIdentifier()) {
-			const locStart = key.node.loc?.start!;
-
 			throw new WumError("Expected a comptime known class method name", ctx.decorator);
 		};
 
@@ -67,8 +66,7 @@ class MacroAnalyzer {
 		const matches = methodName.match(/^(On|Once)([A-Z][a-zA-Z]*)$/);
 		if (!matches) throw NAME_ERROR;
 
-		const once = { Once: true, On: false }[matches[1]];
-		if (once === undefined) throw NAME_ERROR;
+		const once: boolean = { Once: true, On: false }[matches[1]] ?? throw_expr(NAME_ERROR);
 
 		const type = matches[2].charAt(0).toLowerCase() + matches[2].slice(1);
 

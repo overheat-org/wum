@@ -1,3 +1,5 @@
+import { Logger } from '@wum/shared';
+
 export class CommandContainer {
     list = new Array<any>;
     map: Record<string, any> = {};
@@ -16,8 +18,7 @@ export class CommandContainer {
                 return command;
             })
             .catch(err => {
-                console.error("Erro ao registrar comando:", err);
-                throw err;
+                Logger.error(`Failed to load command\n${err}`);
             })
             .finally(() => {
                 this.pending.delete(p);
