@@ -38,31 +38,31 @@ export interface Module {
 export interface GraphSymbol {
 	kind: string
 	id: string
-	path: NodePath
+	node: T.Node
 	parent?: GraphSymbol
 }
 
 /** @internal */
 class Graph {
-	private symbolsByFile = new Map<string, Set<WeakRef<GraphSymbol>>>();
-	private symbolsByKey = new Map<string, WeakRef<GraphSymbol>>();
+	private symbolsByFile = new Map<string, Array<GraphSymbol>>();
+	private symbolsByKey = new Map<string, GraphSymbol>();
 
 	private getSymbolKey(symbol: GraphSymbol): string {
-		return `${symbol.path}:${symbol.id}`;
+		return `${symbol.node.loc!.filename}:${symbol.id}`;
 	}
 
 	// fix: resolver o symbol node
 	
 	addSymbol(symbol: GraphSymbol) {
 		const key = this.getSymbolKey(symbol);
-		this.symbolsByKey.set(key, new WeakRef(symbol));
+		this.symbolsByKey.set(key, symbol);
 
-		let set = this.symbolsByFile.get(symbol.node);
-		if (!set) {
-			set = new Set();
-			this.symbolsByFile.set(symbol.node, set);
+		let array = this.symbolsByFile.get(key);
+		if (!array) {
+			array = [];
+			this.symbolsByFile.set(symbol.node.node.loc!.filename, array);
 		}
-		set.add(new WeakRef(symbol));
+		array.push(symbol);
 		return symbol;
 	}
 
@@ -76,7 +76,7 @@ class Graph {
 		}
 
 		const key = this.getSymbolKey(symbol);
-		const existing = this.symbolsByKey.get(key)?.deref();
+		const existing = this.symbolsByKey.get(key);
 		if (existing && parent) existing.parent = parent;
 
 		return existing ?? this.addSymbol({ ...symbol, parent });
@@ -84,48 +84,26 @@ class Graph {
 
 	private resolveSymbolFromNode(node: NodePath) {
 		const symbol: GraphSymbol = {
-			node,
 			id: resolveNodeId(node).node.name,
 			kind: node.type,
-			path: node.node.loc!.filename
+			node: node
 		}
 
 		return symbol;
 	}
 
-	getSymbolsByModule(path: string) {
-		const set = this.symbolsByFile.get(path);
-		if (!set) return [];
-
-		const validSymbols: GraphSymbol[] = [];
-		for (const ref of set) {
-			const symbol = ref.deref();
-			if (symbol) validSymbols.push(symbol);
-			else set.delete(ref);
-		}
-
-		return validSymbols;
+	getSymbolsByFile(path: string) {
+		return this.symbolsByFile.get(path) ?? [];
 	}
 
-	findSymbol(opts: { path: string, id: string }) {
-		const set = this.symbolsByFile.get(opts.path);
-		if (!set) return null;
-
-		for (const ref of set) {
-			const symbol = ref.deref();
-			if (symbol && symbol.id === opts.id) return symbol;
-		}
-		return null;
-	}
-
-	private fileByPath = new Map<string, string>;
+	private files = new Map<string, string>;
 
 	addFile(path: string, value: string) {
-		this.fileByPath.set(path, value);
+		this.files.set(path, value);
 	}
 
 	getFile(path: string) {
-		return this.fileByPath.get(path)!;
+		return this.files.get(path)!;
 	}
 
 	private _injectables = new Array<Injectable>;

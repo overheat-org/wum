@@ -4,6 +4,7 @@ import IndexGenerator from './gen.index';
 import Graph from '../graph';
 import _generate from '@babel/generator';
 import { PluginContext } from 'rollup';
+import CommandsGenerator from './gen.commands';
 
 const generate = ('default' in _generate ? _generate.default : _generate) as typeof _generate;
 
@@ -16,7 +17,7 @@ class CodeGenerator {
 
 	constructor(graph: Graph) {
 		this.generators = {
-			commands: new CommandsGenerator(),
+			commands: new CommandsGenerator(graph),
 			manifest: new ManifestGenerator(graph),
 			index: new IndexGenerator(),
 		}
@@ -36,9 +37,9 @@ class CodeGenerator {
 		return this.generators.index.generate();
 	}
 
-	generateManifest() {
+	generateManifest(buildPath: string) {
 		return this.generateCode(
-			this.generators.manifest.generate()
+			this.generators.manifest.generate(buildPath)
 		);
 	}
 

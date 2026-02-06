@@ -1,5 +1,6 @@
 packages:
   - "packages/*"
+  - "packages/**/__test__/"
   - "apps/*"
 catalog:
   '@babel/generator': ^7.28.5

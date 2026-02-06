@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "node ../dist/cli.js . --hot"
+    "test": "wum"
   },
   "dependencies": {
-    "wum": "file:.."
+    "wum.js": "workspace:*"
   }
 }

@@ -2,26 +2,31 @@
 	"name": "wum.js",
 	"version": "0.2.0",
 	"type": "module",
+	"bin": {
+		"wum": "./lib/cli.js"
+	},
 	"scripts": {
-		"build": "tsup"
+		"build": "tsup",
+		"test": "cd .\\__test__ && wum"
 	},
 	"exports": {
 		".": {
-			"import": "./dist/index.js",
-			"types": "./types/index.d.ts"
+			"import": "./lib/index.js",
+			"types": "./lib/index.d.ts"
 		},
 		"./jsx-runtime": {
-			"import": "./dist/jsx-runtime.js",
-			"types": "./types/jsx-runtime.d.ts"
+			"import": "./lib/jsx-runtime.js",
+			"types": "./lib/jsx-runtime.d.ts"
 		},
 		"./hooks": {
-			"import": "./dist/hooks.js",
-			"types": "./types/hooks.d.ts"
+			"import": "./lib/hooks.js",
+			"types": "./lib/hooks.d.ts"
 		}
 	},
 	"dependencies": {
 		"@wum/cli": "workspace:*",
 		"@wum/runtime": "workspace:*",
+		"@wum/shared": "workspace:*",
 		"@keyv/sqlite": "^4.0.6",
 		"discord.js": "catalog:",
 		"diseact": "catalog:",

@@ -2,9 +2,6 @@ import { defineConfig } from "tsup";
 
 export default defineConfig({
 	entry: ["./src/index.ts"],
-	outDir: "out",
+	outDir: "lib",
 	format: "esm",
-	banner: {
-		js: "#!/usr/bin/node"
-	}
 });

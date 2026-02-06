@@ -8,6 +8,10 @@ export const Logger = {
 	},
 
 	warn(text: string) {
-		console.log(`\x1b[33m⚠ Warning |\x1b[0m ${text}`);
+		console.warn(`\x1b[33m⚠ Warning |\x1b[0m ${text}`);
+	},
+
+	error(text: string) {
+		console.error(`Error | ${text}`);
 	}
 }

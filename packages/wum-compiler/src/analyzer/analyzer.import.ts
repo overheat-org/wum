@@ -19,7 +19,7 @@ export class ImportAnalyzer {
 
 		await this.analyzeBinding(binding?.path);
 
-		const symbols = this.graph.getSymbolsByModule(path.node.loc!.filename)
+		const symbols = this.graph.getSymbolsByFile(path.node.loc!.filename);
 
 		return symbols.find(s => s.id == typeName);
 	}
@@ -43,11 +43,11 @@ export class ImportAnalyzer {
 		const resolved = await this.resolver.resolve(source, fromFile);
 
 		if (resolved.kind === "file") {
-			return this.scanner.scanFile(resolved.path, FileTypes.Service);
+			return await this.scanner.scanFile(resolved.path, FileTypes.Service);
 		}
 
 		if (resolved.kind === "module") {
-			return this.scanner.scanModule(resolved.root);
+			return await this.scanner.scanModule(resolved.root);
 		}
 	}
 }

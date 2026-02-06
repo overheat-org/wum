@@ -5,7 +5,7 @@ import { NodePath } from '@babel/traverse';
 export class CommandTransformer {
 	private analyzer = new CommandAnalyzer();
 
-	transform(ast: T.File) {
+	transform(ast: NodePath<T.File>) {
 		const instructions = this.analyzer.analyze(ast);
 
 		const map = {

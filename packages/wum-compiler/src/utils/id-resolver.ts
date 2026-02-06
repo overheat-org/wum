@@ -69,7 +69,7 @@ function resolveExpression(node: NodeLike<T.Expression>): T.Identifier | NodePat
 }
 
 export function resolveNodeId(node: NodePath<any>): NodePath<T.Identifier>;
-export function resolveNodeId(node: T.Expression): T.Identifier;
+export function resolveNodeId(node: T.Expression | T.Declaration): T.Identifier;
 export function resolveNodeId(node: NodeLike<any>): T.Identifier | NodePath<T.Identifier> {
 	return resolveExpression(node);
 }
