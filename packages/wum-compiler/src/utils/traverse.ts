@@ -1,3 +1,5 @@
 import traverse from "@babel/traverse";
 
-export default (traverse as unknown as { default: typeof traverse }).default;
+const resolved = (traverse as unknown as { default?: typeof traverse }).default ?? traverse;
+
+export default resolved;

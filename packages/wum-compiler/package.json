@@ -10,5 +10,12 @@
 	},
 	"dependencies": {
 		"@wum/shared": "workspace:*"
+	},
+	"devDependencies": {
+		"@babel/generator": "catalog:",
+		"@babel/parser": "catalog:",
+		"@babel/traverse": "catalog:",
+		"@babel/types": "catalog:",
+		"tsx": "catalog:"
 	}
 }

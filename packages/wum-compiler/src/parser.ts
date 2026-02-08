@@ -7,7 +7,7 @@ import { NodePath } from '@babel/traverse';
 class Parser {
 	constructor(private graph: Graph) { }
 
-	private declarations = new Map<string, T.Statement>();
+	private declarations = new Map<string, NodePath<T.Node>>();
 
 	private map = {
 		ExportNamedDeclaration: this.parseExportNamed,
@@ -24,73 +24,74 @@ class Parser {
 		});
 
 		let result!: NodePath<T.File>;
+		let programPath!: NodePath<T.Program>;
 
 		traverse(ast, {
 			File: (nodePath) => {
 				result = nodePath;
-				
-				this.parseDeclarations(nodePath.node.program.body);
+
+				programPath = nodePath.get("program") as NodePath<T.Program>;
+				this.parseDeclarations(programPath);
 			}
 		});
 
-		ast.program.body.forEach(stmt => {
-			const handler = this.map[stmt.type as keyof typeof this.map];
+		const body = programPath.get("body") as NodePath<T.Statement>[];
+		for (const stmtPath of body) {
+			const handler = this.map[stmtPath.node.type as keyof typeof this.map];
 			if (handler) {
-				handler.call(this, stmt as any);
+				handler.call(this, stmtPath as any);
 			}
-		});
+		}
 
 		return result;
 	}
 
-	private parseDeclarations(body: T.Statement[]) {
-		for (const stmt of body) {
-			switch (stmt.type) {
-				case 'VariableDeclaration': {
-					for (const decl of stmt.declarations) {
-						if (T.isIdentifier(decl.id)) {
-							this.declarations.set(decl.id.name, stmt);
-						}
+	private parseDeclarations(programPath: NodePath<T.Program>) {
+		const body = programPath.get("body") as NodePath<T.Statement>[];
+
+		for (const stmtPath of body) {
+			if (stmtPath.isVariableDeclaration()) {
+				const declarations = stmtPath.get("declarations") as NodePath<T.VariableDeclarator>[];
+				for (const declPath of declarations) {
+					const idPath = declPath.get("id");
+					if (idPath.isIdentifier()) {
+						this.declarations.set(idPath.node.name, stmtPath);
 					}
-					break;
 				}
-				case 'FunctionDeclaration': {
-					if (stmt.id) {
-						this.declarations.set(stmt.id.name, stmt);
-					}
-					break;
+				continue;
+			}
+
+			if (stmtPath.isFunctionDeclaration() || stmtPath.isClassDeclaration()) {
+				const idPath = stmtPath.get("id");
+				if (idPath && idPath.isIdentifier()) {
+					this.declarations.set(idPath.node.name, stmtPath);
 				}
-				case 'ClassDeclaration': {
-					if (stmt.id) {
-						this.declarations.set(stmt.id.name, stmt);
-					}
-					break;
-				}
-				case 'TSInterfaceDeclaration': {
-					this.declarations.set(stmt.id.name, stmt);
-					break;
-				}
-				case 'TSTypeAliasDeclaration': {
-					this.declarations.set(stmt.id.name, stmt);
-					break;
-				}
-				case 'TSEnumDeclaration': {
-					this.declarations.set(stmt.id.name, stmt);
-					break;
+				continue;
+			}
+
+			if (
+				stmtPath.isTSInterfaceDeclaration() ||
+				stmtPath.isTSTypeAliasDeclaration() ||
+				stmtPath.isTSEnumDeclaration()
+			) {
+				const idPath = stmtPath.get("id");
+				if (idPath && idPath.isIdentifier()) {
+					this.declarations.set(idPath.node.name, stmtPath);
 				}
 			}
 		}
 	}
 
-	private parseExportNamed(exportNamed: T.ExportNamedDeclaration) {
-		const { declaration, specifiers } = exportNamed;
+	private parseExportNamed(exportNamedPath: NodePath<T.ExportNamedDeclaration>) {
+		const declarationPath = exportNamedPath.get("declaration") as NodePath<T.Declaration> | null;
+		const specifiers = exportNamedPath.get("specifiers") as NodePath<T.ExportSpecifier>[];
 
-		if (declaration) {
-			const resolvedId = this.parseId(declaration);
+		if (declarationPath && declarationPath.node) {
+			const resolvedId = this.parseId(declarationPath.node);
 			if (resolvedId) {
 				this.graph.addSymbol({
-					node: declaration,
-					kind: declaration.type,
+					node: declarationPath,
+					kind: declarationPath.node.type,
 					id: resolvedId.name,
 				});
 			}
@@ -98,44 +99,59 @@ class Parser {
 
 		if (specifiers.length === 0) return;
 
-		for (const specifier of specifiers) {
-			if (specifier.type === 'ExportSpecifier') {
-				const localDecl = this.declarations.get(specifier.local.name);
-				if (localDecl) {
-					this.graph.addSymbol({
-						node: localDecl,
-						kind: localDecl.type,
-						id: specifier.exported.name,
-					});
-				}
+		for (const specifierPath of specifiers) {
+			const localName = specifierPath.node.local.name;
+			const exportedName = specifierPath.node.exported.name;
+
+			const localDecl =
+				this.declarations.get(localName) ??
+				(specifierPath.scope.getBinding(localName)?.path as NodePath<T.Node> | undefined);
+
+			if (localDecl) {
+				this.graph.addSymbol({
+					node: localDecl,
+					kind: localDecl.node.type,
+					id: exportedName,
+				});
+			} else {
+				this.graph.addSymbol({
+					node: specifierPath,
+					kind: exportNamedPath.node.type,
+					id: exportedName,
+				});
 			}
 		}
 	}
 
-	private parseExportAll(exportAll: T.ExportAllDeclaration) {
-		if (exportAll.source) {
-			console.log(`Re-exporting all from: ${exportAll.source.value}`);
-		}
+	private parseExportAll(exportAllPath: NodePath<T.ExportAllDeclaration>) {
+		this.graph.addSymbol({
+			node: exportAllPath,
+			kind: exportAllPath.node.type,
+			id: '*',
+		});
 	}
 
-	private parseExportDefault(exportDefault: T.ExportDefaultDeclaration) {
-		const { declaration } = exportDefault;
+	private parseExportDefault(exportDefaultPath: NodePath<T.ExportDefaultDeclaration>) {
+		const declarationPath = exportDefaultPath.get("declaration") as NodePath<
+			T.Declaration | T.Expression
+		>;
 
-		if (T.isIdentifier(declaration)) {
+		if (declarationPath.isIdentifier()) {
 			this.graph.addSymbol({
-				node: exportDefault,
-				kind: 'ExportDefaultDeclaration',
+				node: exportDefaultPath,
+				kind: exportDefaultPath.node.type,
 				id: 'default',
 			});
-		} else {
-			const resolvedId = this.parseId(declaration);
-
-			this.graph.addSymbol({
-				node: declaration,
-				kind: declaration.type,
-				id: resolvedId?.name ?? 'default',
-			});
+			return;
 		}
+
+		const resolvedId = this.parseId(declarationPath.node);
+
+		this.graph.addSymbol({
+			node: declarationPath,
+			kind: declarationPath.node.type,
+			id: resolvedId?.name ?? 'default',
+		});
 	}
 
 	private parseId(elem: T.Node): T.Identifier | null {

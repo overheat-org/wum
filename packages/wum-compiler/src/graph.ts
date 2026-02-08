@@ -38,7 +38,7 @@ export interface Module {
 export interface GraphSymbol {
 	kind: string
 	id: string
-	node: T.Node
+	node: NodePath
 	parent?: GraphSymbol
 }
 
@@ -48,7 +48,7 @@ class Graph {
 	private symbolsByKey = new Map<string, GraphSymbol>();
 
 	private getSymbolKey(symbol: GraphSymbol): string {
-		return `${symbol.node.loc!.filename}:${symbol.id}`;
+		return `${symbol.node.node.loc!.filename}:${symbol.id}`;
 	}
 
 	// fix: resolver o symbol node
@@ -179,4 +179,3 @@ class Graph {
 }
 
 export default Graph;
-
