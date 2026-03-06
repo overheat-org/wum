@@ -1,0 +1,13 @@
+{
+  "name": "@examples/pokebot",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "npx wum",
+    "debug": "npx wum --inspect"
+  },
+  "dependencies": {
+    "discord.js": "^14.24.2",
+    "wum.js": "latest"
+  }
+}

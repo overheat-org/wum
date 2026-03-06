@@ -4,7 +4,7 @@
             "ESNext"
         ],
         "jsx": "preserve",
-        "jsxImportSource": "wum",
+        "jsxImportSource": "wum.js",
         "baseUrl": "./",
         "strictPropertyInitialization": false,
         "paths": {
