@@ -1,5 +1,4 @@
 import { Client } from "discord.js";
-import type { WumClient } from "wum.js";
 
 export type ClassLike = new (...args: any[]) => any;
 type Injectable = { entity: ClassLike; dependencies: ClassLike[] };
@@ -28,7 +27,7 @@ export class DependencyInjectorResolver {
 
     constructor(client: Client) {
         this.instanceFromDependency.set(Client, client);
-        this.instanceFromDependency.set(WumClient, client);
+        this.instanceFromDependency.set(client.constructor as ClassLike, client);
     }
 
     register(entity: ClassLike, dependencies: ClassLike[] = []) {

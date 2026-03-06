@@ -11,7 +11,7 @@ declare const VERSION: string
 
 export class Runtime {
 	constructor(client: WumClient, private entryUrl: string) {
-		Logger.startup(VERSION);
+		Logger.startup(typeof VERSION === 'undefined' ? 'dev' : VERSION);
 
 		this.dependencyManager = new DependencyManager(client);
 		this.protocolManager = new ProtocolsManager(this.dependencyManager);

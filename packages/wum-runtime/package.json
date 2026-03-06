@@ -4,12 +4,17 @@
 	"main": "./lib/index.js",
 	"types": "./src/index.ts",
 	"scripts": {
-		"build": "tsup"
+		"build": "bunx tsup",
+		"test": "bunx tsx --test \"src/**/__test__/**/*.js\""
 	},
 	"dependencies": {
 		"@wum/shared": "workspace:*"
 	},
 	"devDependencies": {
+		"discord.js": "catalog:",
+		"tsup": "catalog:",
+		"tsx": "catalog:",
+		"typescript": "catalog:",
 		"wum.js": "workspace:*"
 	}
 }

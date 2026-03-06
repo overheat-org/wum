@@ -10,7 +10,8 @@ class Manifest {
 	) {}
 	
 	static async parse(path: string) {
-		const data = await import(path);
+		const moduleData = await import(path);
+		const data = moduleData.default ?? moduleData;
 
 		return new this(
 			data[ManifestType.Routes],
