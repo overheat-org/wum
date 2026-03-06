@@ -1,10 +1,11 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert';
 import Parser from '../../parser';
+import Graph from '../../graph';
 import CommandAnalyzer from '../analyzer.command';
 
 describe("analyze command", () => {
-	const parser = new Parser();
+	const parser = new Parser(new Graph());
 	const analyzer = new CommandAnalyzer();
 
 	const shouldReject = [
@@ -60,8 +61,9 @@ describe("analyze command", () => {
 	for (const { name, code } of shouldAccept) {
 		it(`should accept ${name}`, () => {
 			const node = parser.parse("test.tsx", code);
-
-			assert.doesNotThrow(() => analyzer.analyze(node));
+			const result = analyzer.analyze(node);
+			assert.equal(result.length, 1);
+			assert.equal(result[0].kind, 1);
 		});
 	}
 });

@@ -1,29 +1,54 @@
-import { it, describe } from 'node:test';
-import { CommandTransformer } from '../transformer.command';
-import Parser from '../../parser';
-import CommandAnalyzer from '../../analyzer/analyzer.command';
+import { describe, it } from 'node:test';
 import assert from 'node:assert';
+import Graph from '../../graph';
+import Parser from '../../parser';
+import { CommandTransformer } from '../transformer.command';
 
-const UNEXPECTED = new Error("A unexpected ast was encontered");
+describe("transform command", () => {
+	it("should rewrite imports and default export into async function", () => {
+		const graph = new Graph();
+		const parser = new Parser(graph);
+		const transformer = new CommandTransformer();
+		const filename = "/repo/src/commands/ping.tsx";
 
-// describe("transform command", () => {
-// 	const parser = new Parser();
-// 	const analyzer = new CommandAnalyzer();
-// 	const transformer = new CommandTransformer(analyzer);
-	
-// 	const ast = parser.parse();
-// 	transformer.transform(ast);
+		const ast = parser.parse(filename, `
+			import PingSvc, { PongSvc } from "../managers/ping";
+			export default <command name="ping"></command>;
+		`);
 
-// 	const [iifeDecl] = ast.program.body;
-// 	if(iifeDecl.type != "ExpressionStatement") throw UNEXPECTED;
+		transformer.transform(ast);
 
-// 	const callExpr = iifeDecl.expression;
-// 	if(callExpr.type != "CallExpression") throw UNEXPECTED;
+		assert.equal(ast.node.body.length, 1);
+		const [onlyStatement] = ast.node.body;
+		assert.equal(onlyStatement.type, "ExportDefaultDeclaration");
+		assert.equal(onlyStatement.declaration.type, "FunctionExpression");
+		assert.equal(onlyStatement.declaration.async, true);
 
-// 	const fnExpr = callExpr.callee;
-// 	if(fnExpr.type != "FunctionExpression") throw UNEXPECTED;
+		const fnBody = onlyStatement.declaration.body.body;
+		assert.equal(fnBody.length, 3);
+		assert.equal(fnBody[0].type, "VariableDeclaration");
+		assert.equal(fnBody[1].type, "VariableDeclaration");
+		assert.equal(fnBody[2].type, "ReturnStatement");
 
-// 	const blockBody = fnExpr.body.body;
-// 	const returnStmt = blockBody.find(s => s.type == "ReturnStatement");
-// 	if(!returnStmt) throw UNEXPECTED;
-// });
+		const initDefault = fnBody[0].declarations[0].init;
+		assert.equal(initDefault.type, "MemberExpression");
+		assert.equal(initDefault.object.type, "AwaitExpression");
+		assert.equal(initDefault.object.argument.type, "CallExpression");
+		assert.equal(initDefault.object.argument.callee.type, "Import");
+		assert.equal(
+			initDefault.object.argument.arguments[0].value,
+			"/repo/src/services/ping"
+		);
+		assert.equal(initDefault.property.type, "Identifier");
+		assert.equal(initDefault.property.name, "default");
+
+		const initNamed = fnBody[1].declarations[0].init;
+		assert.equal(initNamed.type, "MemberExpression");
+		assert.equal(
+			initNamed.object.argument.arguments[0].value,
+			"/repo/src/services/ping"
+		);
+		assert.equal(initNamed.property.type, "Identifier");
+		assert.equal(initNamed.property.name, "PongSvc");
+	});
+});
