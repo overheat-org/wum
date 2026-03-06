@@ -15,10 +15,10 @@ type Imports = GraphSymbol[];
 class ManifestGenerator {
 	constructor(private graph: Graph) { }
 
-	generate(buildPath: string) {
+	generate(outputDir: string) {
 		const importsAcc = new Array<GraphSymbol>();
 		const obj = this.generateObject(importsAcc);
-		const imports = this.generateImports(importsAcc, buildPath);
+		const imports = this.generateImports(importsAcc, outputDir);
 
 		const file = T.file(
 			T.program([
@@ -30,16 +30,37 @@ class ManifestGenerator {
 		return file;
 	}
 
-	generateImports(symbols: GraphSymbol[], buildPath: string) {
-		return symbols.map(symbol => {
-			const id = T.identifier(symbol.id);
-			const p = path.resolve(buildPath, symbol.node.node.loc!.filename)
+	generateImports(symbols: GraphSymbol[], outputDir: string) {
+		const statements: T.Statement[] = [];
+		const seen = new Set<string>();
+		let nsIndex = 0;
 
-			return T.importDeclaration(
-				[T.importSpecifier(id, id)],
-				T.stringLiteral(p)
-			);
-		});
+		for (const symbol of symbols) {
+			const sourceFile = symbol.node.node.loc!.filename;
+			const dedupeKey = `${sourceFile}:${symbol.id}`;
+			if (seen.has(dedupeKey)) {
+				continue;
+			}
+			seen.add(dedupeKey);
+			const importPath = path.resolve(sourceFile).split(path.sep).join(path.posix.sep);
+			const namespaceId = T.identifier(`__wum_import_${nsIndex++}`);
+
+			statements.push(T.importDeclaration(
+				[T.importNamespaceSpecifier(namespaceId)],
+				T.stringLiteral(importPath)
+			));
+			statements.push(T.variableDeclaration("const", [
+				T.variableDeclarator(
+					T.identifier(symbol.id),
+					T.memberExpression(
+						namespaceId,
+						T.identifier(symbol.id === "default" ? "default" : symbol.id)
+					)
+				)
+			]));
+		}
+
+		return statements;
 	}
 
 	generateObject(imports: GraphSymbol[]) {

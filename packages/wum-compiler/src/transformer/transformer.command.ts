@@ -1,6 +1,7 @@
 import * as T from '@babel/types';
 import CommandAnalyzer, { InstructionKind } from '../analyzer/analyzer.command';
 import { NodePath } from '@babel/traverse';
+import nodePath from 'node:path';
 
 export class CommandTransformer {
 	private analyzer = new CommandAnalyzer();
@@ -13,14 +14,22 @@ export class CommandTransformer {
 			[InstructionKind.ExportDefault]: this.transformExportDefault,
 		};
 
-		console.log({instructions})
 		for (const instruction of instructions) {
-			map[instruction.kind].bind(this, instruction.value);
+			map[instruction.kind].call(this, instruction.value);
 		}
 	}
 
 	transformImport(path: NodePath<T.ImportDeclaration>) {
-		const source = path.node.source.value;
+		let source = path.node.source.value;
+		if (source.includes('/managers/')) {
+			source = source.replace('/managers/', '/services/');
+		}
+		if (source.startsWith('./') || source.startsWith('../')) {
+			const fromFile = path.node.loc?.filename;
+			if (fromFile) {
+				source = nodePath.resolve(nodePath.dirname(fromFile), source);
+			}
+		}
 		const specifiers = path.node.specifiers;
 
 		const importExpressions = specifiers.map(specifier => {
@@ -59,15 +68,16 @@ export class CommandTransformer {
 			T.returnStatement(path.node.declaration)
 		);
 
-		parent.replaceWith(
-			T.callExpression(
+		parent.node.body = [
+			T.exportDefaultDeclaration(
 				T.functionExpression(
 					null,
 					[],
-					T.blockStatement(parent.node.body)
-				),
-				[]
+					T.blockStatement(parent.node.body),
+					false,
+					true
+				)
 			)
-		);
+		];
 	}
 }

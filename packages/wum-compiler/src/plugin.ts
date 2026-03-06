@@ -13,9 +13,6 @@ function BridgePlugin(graph: Graph, codegen: CodeGenerator, config: Config) {
 	return {
 		name: __NAME__,
 		version: __VERSION__,
-		buildEnd() {
-			codegen.emitCommands(this);
-		},
 		resolveId(id) {
 			return id;
 		},
@@ -23,8 +20,11 @@ function BridgePlugin(graph: Graph, codegen: CodeGenerator, config: Config) {
 			if (path === 'virtual:index') {
 				return codegen.generateIndex();
 			}
+			if (path === 'virtual:commands.tsx') {
+				return codegen.generateCommands();
+			}
 			if (path === 'virtual:manifest') {
-				return codegen.generateManifest(config.buildPath);
+				return codegen.generateManifest(config.vite!.build!.outDir!);
 			}
 			return graph.getFile(path);
 		},

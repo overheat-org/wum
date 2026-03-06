@@ -8,19 +8,26 @@ import { FileTypes } from '@wum/shared';
 import { NodePath } from '@babel/traverse';
 
 class Transformer {
-	private services: ServiceTransformer;
+	private services?: ServiceTransformer;
 	private commands: CommandTransformer;
-	public scanner!: Scanner
 
 	constructor(private graph: Graph, parser: Parser) {
 		this.commands = new CommandTransformer();
-		this.services = new ServiceTransformer(graph, this.scanner);
+	}
+
+	set scanner(scanner: Scanner) {
+		this.services = new ServiceTransformer(this.graph, scanner);
 	}
 
 	transform(type: FileTypes, ast: NodePath<T.Program>) {
 		return {
 			[FileTypes.Command]: () => this.commands.transform(ast),
-			[FileTypes.Service]: () => this.services.transform(ast)
+			[FileTypes.Service]: () => {
+				if (!this.services) {
+					throw new Error("Service transformer is not initialized");
+				}
+				return this.services.transform(ast);
+			}
 		}[type]();
 	}
 }

@@ -37,6 +37,9 @@ export class ConfigEvaluator {
 
 	private evalVite(config: vite.UserConfig, cwd: string) {
 		config.base = './';
+		config.esbuild ??= {};
+		config.esbuild.jsx = "automatic";
+		config.esbuild.jsxImportSource ??= "wum";
 		config.build ??= {};
 		config.build.outDir = j(cwd, this.config.buildPath!);
 
@@ -61,20 +64,24 @@ export class ConfigEvaluator {
 
 		(rollup.input as any[]).push(
 			'virtual:index',
+			'virtual:commands.tsx',
 			'virtual:manifest'
 		);
 	}
 
 	private evalRollupExternal(rollup: RollupOptions) {
 		rollup.external = (id) => {
-			const input = (this.config.vite!.build!.rollupOptions!.input as any[])
-				.map(i => path.resolve(this.config.cwd!, i));
+			if (id.startsWith('\0')) return false;
+			if (id.startsWith('virtual:')) return false;
+			if (id.startsWith('./') || id.startsWith('../')) return false;
 
-			const normalizedId = path.resolve(id);
+			if (path.isAbsolute(id)) {
+				const relativeToCwd = path.relative(this.config.cwd!, id);
+				const isInsideCwd = !relativeToCwd.startsWith('..') && !path.isAbsolute(relativeToCwd);
+				return !isInsideCwd;
+			}
 
-			if (input.includes(normalizedId)) return false;
-
-			return /^((?!\.\/|\.\.\/|virtual:).)*$/.test(id);
+			return true;
 		};
 	}
 
@@ -92,13 +99,13 @@ export class ConfigEvaluator {
 			const moduleId = chunk.facadeModuleId ?? '';
 			const pattern = j(this.config.entryPath, this.config.servicesPath);
 			
-			console.log(JSON.stringify(chunk));
-			
 			if (moduleId.startsWith('virtual:')) {
-				return moduleId.split(':')[1] + '.js';
+				return moduleId
+					.split(':')[1]
+					.replace(/\.[^.]+$/, '')
+					+ '.js';
 			}
 			else if (path.matchesGlob(moduleId, pattern)) {
-				console.log('is a manager: ', moduleId)
 				return `managers/${basename(moduleId)}.js`;
 			}
 

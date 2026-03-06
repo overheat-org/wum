@@ -8,10 +8,13 @@ import Parser from "./parser";
 import CodeGenerator from "./codegen";
 
 class Scanner {
-	constructor(private codegen: CodeGenerator, private transformer: Transformer) {}
-	
-	private graph = new Graph();
-	private parser = new Parser(this.graph);
+	constructor(
+		private graph: Graph,
+		private parser: Parser,
+		private codegen: CodeGenerator,
+		private transformer: Transformer
+	) {}
+
 	private configManager = new ConfigManager();
 	private limit = createLimit(8);
 
@@ -61,7 +64,7 @@ class Scanner {
 		}
 
 		if(type == FileTypes.Service) {
-			const content = this.codegen.generateCode(ast);
+			const content = this.codegen.generateCode(ast.node);
 			this.graph.addFile(path, content);
 		}
 	}

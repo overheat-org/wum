@@ -20,7 +20,7 @@ export class ServiceTransformer {
 		}
 
 		for(const instruction of instructions) {
-			map[instruction.kind].bind(this, instruction.value);
+			map[instruction.kind].call(this, instruction.value);
 		}
 	}
 	

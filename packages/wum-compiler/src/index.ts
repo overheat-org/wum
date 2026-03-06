@@ -11,7 +11,7 @@ class Compiler {
 	private parser = new Parser(this.graph);
 	private transformer = new Transformer(this.graph, this.parser);
 	private codegen = new CodeGenerator(this.graph);
-    private scanner = new Scanner(this.codegen, this.transformer);
+    private scanner = new Scanner(this.graph, this.parser, this.codegen, this.transformer);
 
 	constructor() {
 		this.transformer.scanner = this.scanner;

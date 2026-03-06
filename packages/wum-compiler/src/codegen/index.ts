@@ -3,7 +3,6 @@ import ManifestGenerator from './gen.manifest';
 import IndexGenerator from './gen.index';
 import Graph from '../graph';
 import _generate from '@babel/generator';
-import { PluginContext } from 'rollup';
 import CommandsGenerator from './gen.commands';
 
 const generate = ('default' in _generate ? _generate.default : _generate) as typeof _generate;
@@ -22,24 +21,18 @@ class CodeGenerator {
 			index: new IndexGenerator(),
 		}
 	}
-	
-	emitCommands(ctx: PluginContext) {
-		const ast = this.generators.commands.generate();
-
-		ctx.emitFile({
-			type: 'asset',
-			source: this.generateCode(ast),
-			fileName: 'commands.js'
-		});
-	}
 
 	generateIndex() {
 		return this.generators.index.generate();
 	}
 
-	generateManifest(buildPath: string) {
+	generateCommands() {
+		return this.generateCode(this.generators.commands.generate());
+	}
+
+	generateManifest(outputDir: string) {
 		return this.generateCode(
-			this.generators.manifest.generate(buildPath)
+			this.generators.manifest.generate(outputDir)
 		);
 	}
 

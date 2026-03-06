@@ -157,13 +157,13 @@ class Graph {
 		});
 	}
 
-	private _commands = new Array<T.File>();
+	private _commands = new Array<NodePath<T.Program>>();
 
 	get commands() {
 		return Object.freeze([...this._commands]);
 	}
 
-	addCommand(command: T.File) {
+	addCommand(command: NodePath<T.Program>) {
 		this._commands.push(command);
 	}
 
