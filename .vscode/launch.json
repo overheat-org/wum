@@ -4,6 +4,18 @@
 		{
 			"type": "node",
 			"request": "launch",
+			"name": "[Main]",
+			"program": "${workspaceFolder}/packages/wum/__test__/node_modules/.bin/wum",
+			"cwd": "${workspaceFolder}/packages/wum/__test__",
+			"console": "integratedTerminal",
+			"sourceMaps": true,
+			"outFiles": [
+				"${workspaceFolder}/packages/wum/__test__/**/*.js"
+			],
+		},
+		{
+			"type": "node",
+			"request": "launch",
 			"name": "[Compiler] Unit Tests",
 			"runtimeExecutable": "${workspaceFolder}/node_modules/.bin/tsx",
 			"args": [

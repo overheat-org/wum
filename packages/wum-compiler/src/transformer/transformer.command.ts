@@ -5,7 +5,7 @@ import { NodePath } from '@babel/traverse';
 export class CommandTransformer {
 	private analyzer = new CommandAnalyzer();
 
-	transform(ast: NodePath<T.File>) {
+	transform(ast: NodePath<T.Program>) {
 		const instructions = this.analyzer.analyze(ast);
 
 		const map = {
@@ -13,6 +13,7 @@ export class CommandTransformer {
 			[InstructionKind.ExportDefault]: this.transformExportDefault,
 		};
 
+		console.log({instructions})
 		for (const instruction of instructions) {
 			map[instruction.kind].bind(this, instruction.value);
 		}

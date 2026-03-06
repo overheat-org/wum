@@ -23,17 +23,20 @@ class Parser {
 			errorRecovery: true
 		});
 
-		let result!: NodePath<T.File>;
 		let programPath!: NodePath<T.Program>;
 
 		traverse(ast, {
-			File: (nodePath) => {
-				result = nodePath;
-
-				programPath = nodePath.get("program") as NodePath<T.Program>;
-				this.parseDeclarations(programPath);
-			}
+			Program: (nodePath) => {
+				if (!programPath) {
+					programPath = nodePath;
+					this.parseDeclarations(programPath);
+				}
+			},
 		});
+
+		if (!programPath) {
+			throw new Error("Parser: program path not resolved during traversal");
+		}
 
 		const body = programPath.get("body") as NodePath<T.Statement>[];
 		for (const stmtPath of body) {
@@ -43,7 +46,7 @@ class Parser {
 			}
 		}
 
-		return result;
+		return programPath
 	}
 
 	private parseDeclarations(programPath: NodePath<T.Program>) {

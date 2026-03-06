@@ -13,14 +13,16 @@ export type AnalyzerInstruction =
 	| BaseInstruction<InstructionKind.ExportDefault, NodePath<T.ExportDefaultDeclaration>>;
 
 class CommandAnalyzer {
-	analyze(ast: NodePath<T.File>): AnalyzerInstruction[] {
-		const result = new Array;
+	analyze(ast: NodePath<T.Program>): AnalyzerInstruction[] {
+		const result = new Array<AnalyzerInstruction>;
 		
 		const bindFn = (fn: (...args: any[]) => unknown, path: NodePath) => {
-			result.push(fn.call(this, path));
+			const instruction = fn.call(this, path) as AnalyzerInstruction | undefined;
+			if(instruction) result.push(instruction);
 		}
 
 		ast.traverse({
+			ImportDeclaration: p => bindFn(this.analyzeImport, p),
 			TSEnumDeclaration: p => bindFn(this.analyzeEnum, p),
 			ClassDeclaration: p => bindFn(this.analyzeClass, p),
 			ExportDefaultDeclaration: p => bindFn(this.analyzeExportDefault, p),
@@ -44,7 +46,12 @@ class CommandAnalyzer {
 		if(
 			decl.isObjectExpression() ||
 			decl.isJSXElement()
-		) return;
+		) {
+			return {
+				kind: InstructionKind.ExportDefault,
+				value: path
+			};
+		}
 
 		throw new WumError(`Cannot export by default a non-command element`, path);
 	}
@@ -62,6 +69,13 @@ class CommandAnalyzer {
 			
 			throw new WumError('Cannot export in command', specifier);
 		}
+	}
+
+	private analyzeImport(path: NodePath<T.ImportDeclaration>) {
+		return {
+			kind: InstructionKind.Import,
+			value: path
+		};
 	}
 }
 

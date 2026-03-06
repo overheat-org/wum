@@ -7,7 +7,7 @@
 	},
 	"scripts": {
 		"build": "tsup",
-		"test": "cd .\\__test__ && wum"
+		"test": "cd __test__ && wum"
 	},
 	"exports": {
 		".": {
@@ -31,5 +31,9 @@
 		"discord.js": "catalog:",
 		"diseact": "catalog:",
 		"keyv": "^5.5.4"
+	},
+	"devDependencies": {
+		"tsup": "catalog:",
+		"typescript": "catalog:"
 	}
 }

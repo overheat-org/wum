@@ -6,6 +6,7 @@
 	"types": "src/index.ts",
 	"scripts": {
 		"build": "vite build",
+		"postinstall": "vite build",
 		"test": "tsx --test \"src/**/__test__/**/*.js\""
 	},
 	"dependencies": {
@@ -16,6 +17,8 @@
 		"@babel/parser": "catalog:",
 		"@babel/traverse": "catalog:",
 		"@babel/types": "catalog:",
-		"tsx": "catalog:"
+		"@types/babel__traverse": "^7.28.0",
+		"tsx": "catalog:",
+		"vite": "^7.3.1"
 	}
 }

@@ -4,9 +4,14 @@
 	"type": "module",
 	"main": "./lib/index.js",
 	"scripts": {
+		"postinstall": "tsup",
 		"build": "tsup"
 	},
 	"dependencies": {
-		"@wum/compiler": "workspace:*"
+		"@wum/compiler": "workspace:*",
+		"zx": "^8.8.5"
+	},
+	"devDependencies": {
+		"tsup": "catalog:"
 	}
 }

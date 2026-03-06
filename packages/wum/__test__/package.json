@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "test": "wum"
+    "test": "wum --inspect"
   },
   "dependencies": {
     "wum.js": "workspace:*"

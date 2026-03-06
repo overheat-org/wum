@@ -50,22 +50,23 @@ class ServiceAnalyzer {
 		this.macroAnalyzer = new MacroAnalyzer(this.dependencyAnalyzer, graph);
 	}
 	
-	analyze(ast: NodePath<T.File>) {
-		const result = new Array<AnalyzerInstruction>;
+	async analyze(ast: NodePath<T.Program>) {
+		const result = new Array<Promise<AnalyzerInstruction | undefined>>;
 
-		const bindFn = (fn: (...args: any[]) => unknown, path: NodePath) => {
-			const instruction = fn.call(this, path) as AnalyzerInstruction | undefined;
-			if(instruction) result.push(instruction);
+		const bindFn = (fn: (...args: any[]) => Promise<AnalyzerInstruction | undefined>, path: NodePath) => {
+			const promise = fn.call(this, path);
+			if(promise) result.push(promise);
 		}
 
 		ast.traverse({
 			Decorator: p => bindFn(this.analyzeDecorator, p),
 		});
 
-		return Promise.all(result);
+		const instructions = await Promise.all(result);
+		return instructions.filter(Boolean) as AnalyzerInstruction[];
 	}
 
-	async analyzeDecorator(path: NodePath<T.Decorator>): MacroDecorator | undefined {
+	async analyzeDecorator(path: NodePath<T.Decorator>) {
 		const expr = path.get("expression") as NodePath<T.Expression>;
 
 		let rules = decoratorRules;

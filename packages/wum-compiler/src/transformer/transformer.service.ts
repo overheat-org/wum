@@ -12,7 +12,7 @@ export class ServiceTransformer {
 		this.analyzer = new ServiceAnalyzer(graph, scanner);
 	}
 
-	async transform(ast: NodePath<T.File>) {
+	async transform(ast: NodePath<T.Program>) {
 		const instructions = await this.analyzer.analyze(ast);
 		
 		const map = {

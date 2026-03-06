@@ -9,5 +9,5 @@ export default defineConfig({
 	],
 	outDir: "lib",
 	format: "esm",
-	dts: true
+	dts: true,
 })

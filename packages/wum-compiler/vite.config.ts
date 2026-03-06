@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import path from "path";
 import { builtinModules as _b } from "module";
+import { name, version } from './package.json';
 
 const builtinModules = [..._b, ..._b.map(m => 'node:' + m)];
 
@@ -21,4 +22,8 @@ export default defineConfig({
 	optimizeDeps: {
 		disabled: true,
 	},
+	define: {
+		__NAME__: JSON.stringify(name),
+		__VERSION__: JSON.stringify(version),
+	}
 });
