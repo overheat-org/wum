@@ -10,21 +10,21 @@ type Item =
 	| Injectable
 	| Module;
 
-type Imports = [];
+type Imports = GraphSymbol[];
 
 class ManifestGenerator {
 	constructor(private graph: Graph) { }
 
 	generate(buildPath: string) {
-		const importsAcc = new Array<Imports>;
+		const importsAcc = new Array<GraphSymbol>();
 		const obj = this.generateObject(importsAcc);
 		const imports = this.generateImports(importsAcc, buildPath);
 
 		const file = T.file(
-			T.program(
+			T.program([
 				...imports,
 				T.exportDefaultDeclaration(obj)
-			)
+			])
 		);
 
 		return file;
@@ -42,7 +42,7 @@ class ManifestGenerator {
 		});
 	}
 
-	generateObject(imports: Imports) {
+	generateObject(imports: GraphSymbol[]) {
 		const allItems = [
 			{
 				key: ManifestType.Routes,

@@ -7,7 +7,7 @@ class CommandsGenerator {
 	generate() {
 		const { commands } = this.graph;
 		
-		let body = Array<T.Statement>(commands.length + 2);
+		const body: T.Statement[] = [];
 		
 		const i = T.identifier("__container__");
 		

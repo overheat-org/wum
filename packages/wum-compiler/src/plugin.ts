@@ -20,10 +20,13 @@ function BridgePlugin(graph: Graph, codegen: CodeGenerator, config: Config) {
 			return id;
 		},
 		async load(path) {
-			return {
-				'virtual:index': codegen.generateIndex(),
-				'virtual:manifest': codegen.generateManifest(config.buildPath),
-			}[path] ?? graph.getFile(path);
+			if (path === 'virtual:index') {
+				return codegen.generateIndex();
+			}
+			if (path === 'virtual:manifest') {
+				return codegen.generateManifest(config.buildPath);
+			}
+			return graph.getFile(path);
 		},
 	} satisfies Plugin;
 }
