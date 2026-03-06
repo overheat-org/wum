@@ -49,8 +49,49 @@ describe("Runtime.start", () => {
 		assert.equal(calls[1][0], "event.setup");
 		assert.equal(calls[2][0], "dependency.load");
 		assert.equal(calls[3][0], "command.load");
-		assert.equal(calls[3][1], "/runtime-entry/commands.js");
+		assert.equal(calls[3][1], "/runtime-entry");
 		assert.equal(calls.some(c => c[0] === "protocols.load"), true);
 		assert.equal(calls.some(c => c[0] === "event.load"), true);
+	});
+
+	it("waits dependency resolution before loading protocols/events", async () => {
+		const calls = [];
+		let resolveDependencyLoad;
+
+		mock.method(Manifest, "parse", async () => ({
+			routes: [{ endpoint: "/ping", method: "get", handler: "h", entity: class C {} }],
+			dependencies: [{ entity: class D {}, dependencies: [] }],
+			events: [{ type: "ready", once: true, handler: "OnReady", entity: class E {} }],
+		}));
+		mock.method(EventManager.prototype, "setup", () => {});
+		mock.method(DependencyManager.prototype, "load", () => {
+			calls.push("dependency.load.start");
+			return new Promise((resolve) => {
+				resolveDependencyLoad = resolve;
+			});
+		});
+		mock.method(CommandManager.prototype, "load", async () => {
+			calls.push("command.load");
+		});
+		mock.method(ProtocolsManager.prototype, "load", async () => {
+			calls.push("protocols.load");
+		});
+		mock.method(EventManager.prototype, "load", async () => {
+			calls.push("event.load");
+		});
+
+		const runtime = new Runtime(
+			{ guilds: { cache: new Map() }, application: { commands: { set: async () => {} } }, on: () => {}, once: () => {} },
+			"/runtime-entry"
+		);
+		const startPromise = runtime.start();
+
+		await Promise.resolve();
+		assert.deepEqual(calls, ["dependency.load.start"]);
+
+		resolveDependencyLoad();
+		await startPromise;
+		assert.equal(calls.includes("protocols.load"), true);
+		assert.equal(calls.includes("event.load"), true);
 	});
 });

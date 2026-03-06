@@ -5,6 +5,12 @@ type Handler = (req: IncomingMessage, res: ServerResponse) => any;
 export class HTTPManager {
     private routes: Record<string, Map<string, Handler>> = {};
     private serverStarted = false;
+    private server?: http.Server;
+    private port: number;
+
+    constructor(port = Number(process.env.WUM_HTTP_PORT ?? 3000)) {
+        this.port = Number.isFinite(port) && port > 0 ? port : 3000;
+    }
 
     private startServer() {
         if (this.serverStarted) return;
@@ -21,15 +27,14 @@ export class HTTPManager {
                 return res.end('Not found');
             }
 
-            try {
-                handler(req, res);
-            } catch (err) {
+            Promise.resolve(handler(req, res)).catch(() => {
                 res.writeHead(500);
                 res.end('Internal server error');
-            }
+            });
         });
 
-        server.listen(3000);
+        server.listen(this.port);
+        this.server = server;
         this.serverStarted = true;
     }
 
@@ -56,5 +61,25 @@ export class HTTPManager {
 
     delete(path: string, handler: Handler) {
         this.register('DELETE', path, handler);
+    }
+
+    async close() {
+        if (!this.server) {
+            return;
+        }
+
+        await new Promise<void>((resolve, reject) => {
+            this.server!.close((error) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve();
+            });
+        });
+
+        this.server = undefined;
+        this.serverStarted = false;
     }
 }

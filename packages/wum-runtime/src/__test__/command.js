@@ -31,6 +31,22 @@ describe("CommandManager", () => {
 		assert.deepEqual(manager["container"].list, [{ name: "ping" }]);
 	});
 
+	it("loads container when a file path is provided", async () => {
+		tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wum-runtime-command-file-"));
+		const filePath = path.join(tmpDir, "commands.js");
+		await fs.writeFile(
+			filePath,
+			"export default { list: [{ name: 'pong' }] };",
+			"utf8"
+		);
+
+		const manager = new CommandManager({ guilds: { cache: new Map() }, application: { commands: { set: async () => {} } } });
+		await manager.load(filePath);
+
+		assert.ok(manager["container"]);
+		assert.deepEqual(manager["container"].list, [{ name: "pong" }]);
+	});
+
 	it("registers in guild commands when GUILD_ID exists", async () => {
 		process.env.GUILD_ID = "guild-1";
 		const calls = [];

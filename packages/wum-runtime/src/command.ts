@@ -1,4 +1,5 @@
 // import { InteractionExecutor } from "diseact";
+import { extname } from "node:path";
 import { AutocompleteInteraction, ChatInputCommandInteraction, Guild } from "discord.js";
 import { WumClient, CommandContainer } from "wum.js";
 
@@ -9,7 +10,10 @@ class CommandManager {
     private container?: CommandContainer;
 
     async load(entryPath: string) {
-        const { default: container }: { default: CommandContainer } = await import(`${entryPath}/commands.js`);
+        const commandFilePath = extname(entryPath) === ".js"
+            ? entryPath
+            : `${entryPath}/commands.js`;
+        const { default: container }: { default: CommandContainer } = await import(commandFilePath);
 
         // this.executor.commandMap = container.map;
         this.container = container;

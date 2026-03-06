@@ -28,12 +28,12 @@ export class Runtime {
 		const manifest = await Manifest.parse(j(this.entryUrl, 'manifest.js'));
 		
 		this.eventManager.setup();
-		this.dependencyManager.load(manifest.dependencies);
+		await this.dependencyManager.load(manifest.dependencies ?? []);
 		
 		await Promise.all([
-			this.commandManager.load(j(this.entryUrl, 'commands.js')),
-			this.protocolManager.load(manifest.routes),
-			this.eventManager.load(manifest.events)
+			this.commandManager.load(this.entryUrl),
+			this.protocolManager.load(manifest.routes ?? []),
+			this.eventManager.load(manifest.events ?? [])
 		]);
 	}
 }

@@ -19,20 +19,22 @@ class EventManager {
 		private commandManager: CommandManager
 	) {}
 
-    async load(events: Event[]) {
+    async load(events: Event[] = []) {
 		events.forEach(this.loadEvent.bind(this));
     }
 
     setup() {
         this.client.on(Events.InteractionCreate, interaction => {
             if (interaction.isChatInputCommand() || interaction.isAutocomplete()) {
-                this.commandManager.run(interaction);
+                void this.commandManager.run(interaction);
             }
         });
 
         this.client.once(Events.ClientReady, () => {
 			Logger.ready(this.client.user?.tag ?? "unknown");
-			this.commandManager.register();
+			void Promise.resolve(this.commandManager.register()).catch((error: Error) => {
+                Logger.error(error.message ?? "Failed to register commands");
+            });
 		});
     }
 
@@ -41,10 +43,12 @@ class EventManager {
         if(!instance) {
             throw new Error("Use @event in classes marked with injectable or manager.")
         }
-        
-        const handler = instance[event.handler].bind(instance);
+        const handler = (instance as any)[event.handler];
+        if (typeof handler !== "function") {
+            throw new Error(`Event handler '${event.handler}' was not found on ${event.entity.name}`);
+        }
 
-        this.client[event.once ? 'once' : 'on'](event.type, handler);
+        this.client[event.once ? 'once' : 'on'](event.type, handler.bind(instance));
     }
 }
 

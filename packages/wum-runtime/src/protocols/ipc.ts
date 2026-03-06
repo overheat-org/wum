@@ -1,26 +1,29 @@
 export class IPCManager {
     private endpoints = new Map<string, Map<string, (req: any) => Promise<any>>>();
+    private readonly onMessage = async (arg: IPCObject | null) => {
+        if (typeof arg !== 'object' || !arg?.url?.startsWith('ipc')) {
+            return;
+        }
+
+        const path = arg.url.replace(/^ipc:\/*/, '/');
+        const method = arg.method.toUpperCase();
+        const methodMap = this.endpoints.get(path);
+        const handler = methodMap?.get(method);
+        
+        if (handler) {
+            try {
+                const result = await handler(arg);
+                process.send?.({ status: 200, body: result, headers: {} });
+            } catch (error: any) {
+                process.send?.({ status: 500, body: error.message || 'Internal error', headers: {} });
+            }
+        } else {
+            process.send?.({ status: 404, body: 'Endpoint not found', headers: {} });
+        }
+    };
 
     constructor() {
-        process.on('message', async (arg: IPCObject | null) => {
-            if (typeof arg === 'object' && arg?.url?.startsWith('ipc')) {
-                const path = arg.url.replace('ipc:/', '');
-                const method = arg.method.toUpperCase();
-                const methodMap = this.endpoints.get(path);
-                const handler = methodMap?.get(method);
-                
-                if (handler) {
-                    try {
-                        const result = await handler(arg);
-                        process.send?.({ status: 200, body: result, headers: {} });
-                    } catch (error: any) {
-                        process.send?.({ status: 500, body: error.message || 'Internal error', headers: {} });
-                    }
-                } else {
-                    process.send?.({ status: 404, body: 'Endpoint not found', headers: {} });
-                }
-            }
-        });
+        process.on('message', this.onMessage);
     }
 
     private registerEndpoint(method: string, path: string, handler: (req: any) => Promise<any>) {
@@ -48,6 +51,10 @@ export class IPCManager {
 
     patch(path: string, handler: (req: any) => Promise<any>) {
         this.registerEndpoint('PATCH', path, handler);
+    }
+
+    close() {
+        process.off('message', this.onMessage);
     }
 }
 
