@@ -25,7 +25,7 @@ Create a `tsconfig.json` with Wum JSX settings:
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "jsx": "preserve",
-    "jsxImportSource": "wum",
+    "jsxImportSource": "wum.js",
     "strict": false
   },
   "include": ["src/**/*"]
