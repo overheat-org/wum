@@ -17,16 +17,35 @@
                     {
                         "group": "Docs",
                         "pages": [
-                            "en-us/getting-started"
+                            "en-us/getting-started",
+                            "en-us/commands",
+                            "en-us/services",
+                            "en-us/hooks",
+                            "en-us/rendering"
+                        ]
+                    }
+                ]
+            },
+            {
+                "language": "pt-BR",
+                "groups": [
+                    {
+                        "group": "Docs",
+                        "pages": [
+                            "pt-br/primeiros-passos",
+                            "pt-br/comandos",
+                            "pt-br/servicos",
+                            "pt-br/hooks",
+                            "pt-br/renderizacao"
                         ]
                     }
                 ]
             }
         ]
     },
-      "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
-  }
+    "colors": {
+        "primary": "#5865f2",
+        "light": "#07C983",
+        "dark": "#15803D"
+    }
 }

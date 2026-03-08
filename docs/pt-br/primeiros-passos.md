@@ -11,7 +11,7 @@ Este guia cria um bot Discord basico com Wum, comandos JSX e servicos.
 
 ```bash
 npm init -y
-npm i wum.js discord.js
+npm i wum.js
 ```
 
 ## 2. Configurar TypeScript
