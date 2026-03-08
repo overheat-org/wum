@@ -6,6 +6,7 @@
         "jsx": "preserve",
         "jsxImportSource": "wum.js",
         "baseUrl": "./",
+        "moduleResolution": "nodenext",
         "strictPropertyInitialization": false,
         "paths": {
             "@utils/*": [

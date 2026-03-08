@@ -1,6 +1,5 @@
-import { Client } from "discord.js";
 import { useState } from "wum.js/hooks";
-import { Manager, Storage } from 'wum.js';
+import { WumClient, Storage } from 'wum.js';
 import { Payment } from './Payment';
 const meta = new Storage('meta');
 
@@ -10,7 +9,7 @@ export class Init {
     async OnceReady() {
         console.log(`READY AT ${this.client.user.tag}`);
     }
-    constructor(private client: Client, private payment: Payment) {
+    constructor(private client: WumClient, private payment: Payment) {
 		this.client.once('OnceReady', this.OnceReady.bind(this));
     }
 }
