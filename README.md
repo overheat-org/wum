@@ -33,7 +33,7 @@ Wum is a productivity-focused framework for Discord bots, with declarative comma
 ## Quick Start
 
 ```bash
-npm i wum.js discord.js
+npm i wum.js
 npx wum
 ```
 
