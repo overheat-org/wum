@@ -1,0 +1,27 @@
+{
+    "$schema": "https://mintlify.com/docs.json",
+    "theme": "mint",
+    "name": "Wum",
+    "favicon": "/assets/logo.svg",
+    "icons": {
+        "library": "lucide"
+    },
+    "appearance": {
+        "default": "system"
+    },
+    "navigation": {
+        "languages": [
+            {
+                "language": "en",
+                "groups": [
+                    {
+                        "group": "Docs",
+                        "pages": [
+                            "en-us/getting-started"
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
