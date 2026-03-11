@@ -1,30 +1,12 @@
-import inspector from 'node:inspector';
+import fs from "fs";
+import { program } from "commander";
 
-const flags = {
-	"--inspect": {
-		description: "Enable inspector mode",
-		async has(port = 9229) {
-			inspector.open(port, "127.0.0.1", true);
-		}
-	}
+program
+    .name("wum")
+    .description("The wum CLI")
+
+const commandFiles = fs.readdirSync(__dirname + "/commands")
+
+for(const fileName of commandFiles) {
+    import(__dirname + "/commands/" + fileName);
 }
-
-async function main() {
-	for(const arg of process.argv) {
-		const [argName, argValue] = arg.split("=");
-
-		await flags[argName as keyof typeof flags]?.has(
-			argValue
-				? JSON.parse(argValue)
-				: undefined,
-		);
-	}
-	
-	const { default: Compiler } = await import("@wum/compiler"); 
-	
-	const compiler = new Compiler();
-	
-	await compiler.build();
-}
-
-main();
