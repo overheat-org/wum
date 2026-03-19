@@ -2,6 +2,7 @@ import { throw_expr, WumError } from "@wum/shared";
 import Graph from "../graph";
 import { DependencyAnalyzer } from "./analyzer.dependency";
 import { DecoratorType, MacroDecorator } from "./analyzer.dto";
+import TypeAnalyzer from "./analyzer.type";
 
 class MacroAnalyzer {
 	async analyze(ctx: MacroDecorator) {
@@ -75,9 +76,15 @@ class MacroAnalyzer {
 			type,
 			symbol
 		});
+
+		const static = ""
 	}
 
-	constructor(private dependencyAnalyzer: DependencyAnalyzer, private graph: Graph) { }
+	constructor(
+		private dependencyAnalyzer: DependencyAnalyzer, 
+		private typeAnalyzer: TypeAnalyzer,
+		private graph: Graph
+	) { }
 }
 
 export default MacroAnalyzer;
