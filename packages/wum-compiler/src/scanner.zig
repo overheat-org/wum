@@ -1,7 +1,7 @@
 const std = @import("std");
 const Token = @import("./token.zig");
-const Scanner = @This();
-const Keywords = std.StaticStringMap(Type).initComptime(.{
+
+const Keywords = std.StaticStringMap(Token.Type).initComptime(.{
     .{ "break", .Keyword },
     .{ "case", .Keyword },
     .{ "catch", .Keyword },
@@ -47,60 +47,56 @@ const Keywords = std.StaticStringMap(Type).initComptime(.{
     .{ "static", .Keyword },
 });
 
+const Scanner = @This();
+
 source: []const u8,
 current: Token = Token.OutOfRange,
 offset: usize = 0,
 
 fn scan(self: Scanner) []Token {
-	switch (self.source[self.offset]) {
-		' ', '\r', '\t' => self.advance(),
-		'a'...'z', 'A'...'Z' => {
-			makeWord();
-			
-			// Token{
-			// 	.type = 
-			// }
-		},
-		'_' => {
-			const w = makeWord();
+    switch (self.source[self.offset]) {
+        ' ', '\r', '\t' => self.advance(),
+        'a'...'z', 'A'...'Z' => {
+            makeWord();
 
-			self.advance();
+            // Token.new
+        },
+        '_' => {
+            const w = makeWord();
 
-			return Token{
-				.type = .Identifier,
-				.value = w,
-			}
-		},
-		'1'...'9' => {},
-		'[' => {}
-	}
+            return Token.new(.Identifier, w);
+        },
+        '1'...'9' => {},
+        '[' => {},
+        '{' => {},
+        '(' => {},
+    }
 }
 
 pub fn advance(self: *Scanner) void {
     self.offset += 1;
-	self.scan();
+    self.scan();
 }
 
 pub fn expect(self: *Scanner, comptime tokenType: Token.Type) !void {
-	if(self.current != tokenType) {
-		return error.SyntaxError;
-	}
+    if (self.current != tokenType) {
+        return error.SyntaxError;
+    }
 }
 
 pub fn expectAndAdvance(self: *Scanner, comptime tokenType: Token.Type) !void {
-	try self.expect(tokenType);
+    try self.expect(tokenType);
 
-	self.offset += 1;
+    self.offset += 1;
 }
 
 pub fn advanceUntil(self: *Scanner, comptime tokenType: Token.Type) !void {
-	while(
-		self.current.type != tokenType and
-		self.current.type != Token.Type.OutOfRange
-	) {
-		self.advance();
-	}
+    while (self.current.type != tokenType and
+        self.current.type != Token.Type.OutOfRange)
+    {
+        self.advance();
+    }
 
-	if(self.current.type != Token.Type.OutOfRange) return error.SyntaxError;
-	return self.current;
+    if (self.current.type != Token.Type.OutOfRange) return error.SyntaxError;
+    return self.current;
 }

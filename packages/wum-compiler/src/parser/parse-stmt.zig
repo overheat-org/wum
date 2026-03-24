@@ -9,18 +9,18 @@ pub fn parse(ctx: *Scanner) !void {
     ctx.current;
 }
 
-fn parseKeyword(ctx: *Scanner) !void {
+const kwHandlers = std.StaticStringMap(*fn (*Scanner) anyerror!Node).initComptime(.{
+    .{ "function", parseFunction },
+});
+
+fn parseKeyword(ctx: *Scanner) !Node {
     const current = ctx.current.value.string;
 
     ctx.advance();
 
-    const handlers = .{
-        .function = parseFunction,
-    };
+    const handler = kwHandlers.get(current);
 
-    const handler = @field(handlers, current);
-
-    return handler.*();
+    return try handler(ctx) orelse @panic("Unknown keywork");
 }
 
 fn parseFunction(ctx: *Scanner) !Node {
