@@ -1,2 +1,4 @@
-lib
-types
+src
+node_modules
+.npmignore
+__test__

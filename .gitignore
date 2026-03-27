@@ -5,3 +5,4 @@ test/.wum
 *lock*
 types/*
 @*
+packages/*/lib

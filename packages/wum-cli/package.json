@@ -1,18 +1,26 @@
 {
-	"name": "@wum/cli",
+	"name": "@wumjs/cli",
 	"version": "0.1.0",
 	"type": "module",
 	"main": "./lib/index.js",
+	"files": [
+		"lib"
+	],
 	"scripts": {
-		"postinstall": "tsup",
-		"build": "tsup"
+		"postinstall": "bunx bunup",
+		"build": "bunx bunup",
+		"prepublishOnly": "bun run build"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"dependencies": {
-		"@wum/compiler": "workspace:*",
+		"@wumjs/compiler": "workspace:*",
 		"commander": "^14.0.3",
 		"zx": "^8.8.5"
 	},
 	"devDependencies": {
-		"tsup": "catalog:"
+		"bunup": "catalog:",
+		"typescript": "catalog:"
 	}
 }

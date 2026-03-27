@@ -1,6 +1,6 @@
 import { NodePath } from "@babel/traverse";
 import * as T from "@babel/types";
-import { WumError } from "@wum/shared";
+import { WumError } from "@wumjs/shared";
 import { AnalyzerInstruction as BaseInstruction } from "./analyzer.dto";
 
 export enum InstructionKind {

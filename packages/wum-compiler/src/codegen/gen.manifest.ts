@@ -1,6 +1,6 @@
 import * as T from '@babel/types';
 import Graph, { GraphSymbol, Route, Event, Service, Injectable, Module } from '../graph';
-import { ManifestType } from '@wum/shared';
+import { ManifestType } from '@wumjs/shared';
 import path from 'path';
 
 type Item =

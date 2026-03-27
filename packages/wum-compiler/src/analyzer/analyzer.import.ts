@@ -3,7 +3,7 @@ import * as T from "@babel/types";
 import { resolveNodeId } from "../utils/id-resolver";
 import Scanner from "../scanner";
 import Graph from "../graph";
-import { FileTypes } from "@wum/shared";
+import { FileTypes } from "@wumjs/shared";
 import { ImportResolver } from "../import-resolver";
 
 // TODO: Talvez seja melhor fazer o scanModule retornar a lista de symbols encontrados no arquivo

@@ -1,7 +1,7 @@
 import { afterEach, describe, it, mock } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs/promises';
-import { FileTypes } from '@wum/shared';
+import { FileTypes } from '@wumjs/shared';
 import Graph from '../graph';
 import Parser from '../parser';
 import Scanner from '../scanner';

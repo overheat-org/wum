@@ -1,5 +1,6 @@
 src
 node_modules
-tsup.config.ts
+bunup.*
 .gitignore
 .npmignore
+tsconfig.json

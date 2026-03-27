@@ -4,7 +4,7 @@ import Scanner from "../scanner";
 import Parser from "../parser";
 import { CommandTransformer } from "./transformer.command";
 import { ServiceTransformer } from "./transformer.service";
-import { FileTypes } from '@wum/shared';
+import { FileTypes } from '@wumjs/shared';
 import { NodePath } from '@babel/traverse';
 
 class Transformer {

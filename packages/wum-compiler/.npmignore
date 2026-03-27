@@ -2,5 +2,7 @@ node_modules
 src
 .gitignore
 .npmignore
-tsup.config.ts
+bunup.*
 __test__
+.zig-cache
+tsconfig.json

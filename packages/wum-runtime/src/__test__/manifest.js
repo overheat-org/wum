@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import Manifest from "../manifest";
-import { ManifestType } from "@wum/shared";
+import { ManifestType } from "@wumjs/shared";
 
 describe("Manifest.parse", () => {
 	let tmpDir = "";

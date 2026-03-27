@@ -1,18 +1,26 @@
 {
-	"name": "@wum/runtime",
+	"name": "@wumjs/runtime",
+	"version": "0.1.0",
 	"type": "module",
 	"main": "./lib/index.js",
-	"types": "./src/index.ts",
+	"types": "./lib/index.d.ts",
+	"files": [
+		"lib"
+	],
 	"scripts": {
-		"build": "bunx tsup",
-		"test": "bunx tsx --test \"src/**/__test__/**/*.js\""
+		"build": "bunx bunup",
+		"test": "bunx tsx --test \"src/**/__test__/**/*.js\"",
+		"prepublishOnly": "bun run build"
+	},
+	"publishConfig": {
+		"access": "public"
 	},
 	"dependencies": {
-		"@wum/shared": "workspace:*"
+		"@wumjs/shared": "workspace:*"
 	},
 	"devDependencies": {
+		"bunup": "catalog:",
 		"discord.js": "catalog:",
-		"tsup": "catalog:",
 		"tsx": "catalog:",
 		"typescript": "catalog:",
 		"wum.js": "workspace:*"

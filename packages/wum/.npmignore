@@ -1,6 +1,7 @@
 src
 node_modules
 .gitignore
-tsup.config.ts
+bunup.*
+tsconfig.json
 .npmignore
 __test__

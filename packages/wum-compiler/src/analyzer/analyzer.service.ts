@@ -1,6 +1,6 @@
 import * as T from '@babel/types';
 import { NodePath } from "@babel/traverse";
-import { HTTP_METHODS } from "@wum/shared";
+import { HTTP_METHODS } from "@wumjs/shared";
 import { AnalyzerInstruction as BaseInstruction, DecoratorSchema, DecoratorType, MacroDecorator } from './analyzer.dto';
 import MacroAnalyzer from './analyzer.macro';
 import { DependencyAnalyzer } from './analyzer.dependency';

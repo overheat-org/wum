@@ -3,7 +3,7 @@ import { join as j } from "node:path";
 import { ConfigManager } from "./config/config.manager";
 import Graph from "./graph";
 import Transformer from "./transformer";
-import { FileTypes } from "@wum/shared";
+import { FileTypes } from "@wumjs/shared";
 import Parser from "./parser";
 import CodeGenerator from "./codegen";
 

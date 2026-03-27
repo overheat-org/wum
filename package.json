@@ -1,9 +1,9 @@
 {
-	"name": "@wum/wum",
+	"name": "@wumjs/wum",
 	"private": true,
 	"workspaces": {
 		"packages": [
-			"packages/**"
+			"packages/*"
 		],
 		"catalog": {
 			"discord.js": "^14.24.2",
@@ -12,7 +12,7 @@
 			"@babel/parser": "^7.28.5",
 			"@babel/types": "^7.28.5",
 			"@babel/generator": "^7.28.5",
-			"tsup": "^8.5.1",
+			"bunup": "^0.16.31",
 			"tsx": "^4.20.5",
 			"typescript": "^5.9.3"
 		}

@@ -1,4 +1,4 @@
-import { throw_expr, WumError } from "@wum/shared";
+import { throw_expr, WumError } from "@wumjs/shared";
 import Graph from "../graph";
 import { DependencyAnalyzer } from "./analyzer.dependency";
 import { DecoratorType, MacroDecorator } from "./analyzer.dto";

@@ -1,6 +1,6 @@
 import { Endpoint } from './protocols';
 import { Event } from './event';
-import { ManifestType } from '@wum/shared';
+import { ManifestType } from '@wumjs/shared';
 
 class Manifest {
 	constructor(

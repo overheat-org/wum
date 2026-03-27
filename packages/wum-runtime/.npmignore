@@ -1,4 +1,5 @@
 src
 .gitignore
 .npmignore
-tsup.config.ts
+bunup.*
+tsconfig.json

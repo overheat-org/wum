@@ -4,7 +4,7 @@ import CommandManager from "./command";
 import EventManager from "./event";
 import type { WumClient } from "wum.js";
 import DependencyManager from "./di/manager";
-import { Logger } from "@wum/shared";
+import { Logger } from "@wumjs/shared";
 import ProtocolsManager from "./protocols";
 
 declare const VERSION: string

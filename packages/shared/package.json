@@ -1,5 +1,5 @@
 {
-	"name": "@wum/shared",
+	"name": "@wumjs/shared",
 	"version": "0.1.0",
 	"type": "module",
 	"main": "./src/index.ts",
@@ -7,7 +7,16 @@
 	"exports": {
 		".": "./src/index.ts"
 	},
+	"scripts": {
+		"build": "bunx bunup",
+		"prepublishOnly": "bun run build"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
 	"devDependencies": {
-		"@babel/traverse": "*"
+		"@babel/traverse": "*",
+		"bunup": "catalog:",
+		"typescript": "catalog:"
 	}
 }

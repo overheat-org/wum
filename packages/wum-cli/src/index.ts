@@ -1,12 +1,6 @@
-import fs from "fs";
 import { program } from "commander";
+import "./commands/pm.js";
 
 program
     .name("wum")
-    .description("The wum CLI")
-
-const commandFiles = fs.readdirSync(__dirname + "/commands")
-
-for(const fileName of commandFiles) {
-    import(__dirname + "/commands/" + fileName);
-}
+    .description("The wum CLI");

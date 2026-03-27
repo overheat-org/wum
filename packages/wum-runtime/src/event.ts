@@ -2,7 +2,7 @@ import { Events } from "discord.js";
 import DependencyManager from "./di/manager";
 import CommandManager from "./command";
 import { ClassLike } from "./di/resolver";
-import { Logger } from "@wum/shared";
+import { Logger } from "@wumjs/shared";
 import type { WumClient } from "wum.js";
 
 export interface Event {

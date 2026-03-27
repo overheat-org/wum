@@ -1,6 +1,6 @@
 import * as T from '@babel/types';
 import { NodePath } from '@babel/traverse';
-import { WumError } from '@wum/shared';
+import { WumError } from '@wumjs/shared';
 import { ImportAnalyzer } from './analyzer.import';
 
 export class DependencyAnalyzer {	
