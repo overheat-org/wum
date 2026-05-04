@@ -1,59 +1,78 @@
-import { afterEach, describe, it, mock } from 'node:test';
-import assert from 'node:assert';
-import fs from 'node:fs/promises';
-import { FileTypes } from '@wum/shared';
-import Graph from '../graph';
-import Parser from '../parser';
-import Scanner from '../scanner';
-import Transformer from '../transformer';
-import CodeGenerator from '../codegen';
+import test from "node:test";
+import assert from "node:assert/strict";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
+import { ProjectScanner } from "../scanner.ts";
 
-describe("scanner", () => {
-	afterEach(() => {
-		mock.restoreAll();
-	});
+test("scanner follows relative imports from scanned files", async () => {
+  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "wum-scanner-"));
 
-	it("scanFile should cache command file and add one command", async () => {
-		const graph = new Graph();
-		const parser = new Parser(graph);
-		const transformer = new Transformer(graph, parser);
-		const codegen = new CodeGenerator(graph);
-		const scanner = new Scanner(graph, parser, codegen, transformer);
+  await fs.mkdir(path.join(cwd, "src", "commands"), { recursive: true });
+  await fs.mkdir(path.join(cwd, "src", "services"), { recursive: true });
 
-		let transformCalls = 0;
-		mock.method(transformer, "transform", async () => {
-			transformCalls++;
-		});
+  await fs.writeFile(
+    path.join(cwd, "src", "commands", "ping.tsx"),
+    'import { Repo } from "../services/repo";\nexport default <command name="ping"></command>;\n',
+  );
+  await fs.writeFile(
+    path.join(cwd, "src", "services", "repo.ts"),
+    "export class Repo {}\n",
+  );
 
-		let readCalls = 0;
-		mock.method(fs, "readFile", async () => {
-			readCalls++;
-			return `export default <command name="ping"></command>;`;
-		});
+  const scanner = new ProjectScanner();
+  const files = await scanner.scanRootModule(cwd, {
+    cwd,
+    entryPath: "src",
+    buildPath: ".wum",
+    commandsPath: "commands/**/*.tsx",
+    servicesPath: "services/**/*.{ts,tsx}",
+    modules: [],
+    vite: {},
+  });
 
-		await scanner.scanFile("/repo/src/commands/ping.tsx", FileTypes.Command);
-		await scanner.scanFile("/repo/src/commands/ping.tsx", FileTypes.Command);
+  const ids = new Set(files.map((file) => path.relative(cwd, file.path)));
+  assert.ok(ids.has(path.join("src", "commands", "ping.tsx")));
+  assert.ok(ids.has(path.join("src", "services", "repo.ts")));
+});
 
-		assert.equal(readCalls, 1);
-		assert.equal(transformCalls, 1);
-		assert.equal(graph.commands.length, 1);
-	});
+test("scanner follows configured module imports by package name", async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), "wum-scanner-module-"));
+  const appCwd = path.join(root, "app");
+  const moduleCwd = path.join(root, "feature-module");
 
-	it("scanFile should emit transformed service file", async () => {
-		const graph = new Graph();
-		const parser = new Parser(graph);
-		const transformer = new Transformer(graph, parser);
-		const codegen = new CodeGenerator(graph);
-		const scanner = new Scanner(graph, parser, codegen, transformer);
+  await fs.mkdir(path.join(appCwd, "src", "services"), { recursive: true });
+  await fs.mkdir(path.join(moduleCwd, "src", "services"), { recursive: true });
 
-		mock.method(transformer, "transform", async () => {});
-		mock.method(fs, "readFile", async () => `export class Init {}`);
-		mock.method(codegen, "generateCode", () => `// transformed service`);
+  await fs.writeFile(
+    path.join(appCwd, "src", "services", "app.ts"),
+    'import { FeatureService } from "@wum/feature";\nexport class App {}\n',
+  );
+  await fs.writeFile(
+    path.join(moduleCwd, "package.json"),
+    JSON.stringify({ name: "@wum/feature" }),
+  );
+  await fs.writeFile(
+    path.join(moduleCwd, ".wumrc"),
+    JSON.stringify({ entryPath: "src" }),
+  );
+  await fs.writeFile(
+    path.join(moduleCwd, "src", "services", "feature.ts"),
+    "export class FeatureService {}\n",
+  );
 
-		const servicePath = "/repo/src/services/init.ts";
-		await scanner.scanFile(servicePath, FileTypes.Service);
+  const scanner = new ProjectScanner();
+  const files = await scanner.scanRootModule(appCwd, {
+    cwd: appCwd,
+    entryPath: "src",
+    buildPath: ".wum",
+    commandsPath: "commands/**/*.tsx",
+    servicesPath: "services/**/*.{ts,tsx}",
+    modules: [path.relative(appCwd, moduleCwd)],
+    vite: {},
+  });
 
-		assert.equal(graph.getFile(servicePath), "// transformed service");
-		assert.equal(graph.commands.length, 0);
-	});
+  const ids = new Set(files.map((file) => path.relative(root, file.path)));
+  assert.ok(ids.has(path.join("app", "src", "services", "app.ts")));
+  assert.ok(ids.has(path.join("feature-module", "src", "services", "feature.ts")));
 });

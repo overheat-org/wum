@@ -1,0 +1,2 @@
+- [] criar `wum.js/macros`
+- [] criar PM para cli

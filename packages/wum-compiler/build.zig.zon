@@ -1,0 +1,9 @@
+.{
+    .name = .wum_compiler,
+    .version = "0.15.2",
+    .dependencies = .{
+        .@"wum-parser" = .{ .path = "../wum-parser" },
+    },
+    .paths = .{"src/main.zig"},
+    .fingerprint = 0xe2c033e27d0aef3e,
+}

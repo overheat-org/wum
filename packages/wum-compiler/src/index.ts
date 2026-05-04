@@ -1,28 +1,28 @@
-import * as vite from 'vite';
-import Scanner from './scanner';
-import Graph from './graph';
-import Parser from './parser';
-import Transformer from './transformer';
-import CodeGenerator from './codegen';
-import BridgePlugin from './plugin';
+import * as vite from "vite";
+import BridgePlugin from "./plugin";
+import { resolveConfig, type Config } from "./config";
+import { ZigAdapter, type CompilerSnapshot } from "./adapter";
+import { ProjectScanner } from "./scanner";
 
 class Compiler {
-	private graph = new Graph();
-	private parser = new Parser(this.graph);
-	private transformer = new Transformer(this.graph, this.parser);
-	private codegen = new CodeGenerator(this.graph);
-    private scanner = new Scanner(this.graph, this.parser, this.codegen, this.transformer);
+  private adapter = new ZigAdapter();
+  private scanner = new ProjectScanner();
 
-	constructor() {
-		this.transformer.scanner = this.scanner;
-	}
+  async prepare(cwd = process.cwd()): Promise<{ config: Config; snapshot: CompilerSnapshot }> {
+    const config = await resolveConfig(cwd);
+    const files = await this.scanner.scanRootModule(cwd, config);
+    const snapshot = await this.adapter.prepare(files);
 
-    async build(cwd = process.cwd()) {
-        const config = await this.scanner.scanRootModule(cwd);
-		(config.vite!.plugins ??= []).unshift(BridgePlugin(this.graph, this.codegen, config));
-		
-        await vite.build(config.vite);
-    }
+    return { config, snapshot };
+  }
+
+  async build(cwd = process.cwd()) {
+    const { config, snapshot } = await this.prepare(cwd);
+    (config.vite.plugins ??= []).unshift(BridgePlugin(snapshot));
+    await vite.build(config.vite);
+  }
 }
 
+export { BridgePlugin, ZigAdapter };
+export type { Config, CompilerSnapshot };
 export default Compiler;

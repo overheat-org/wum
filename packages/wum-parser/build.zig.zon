@@ -1,0 +1,8 @@
+.{
+    .name = .wum_parser,
+    .version = "0.0.1",
+    .fingerprint = 0x4d283ee92b7bcf0e,
+    .paths = .{
+        "src/main.zig",
+    },
+}

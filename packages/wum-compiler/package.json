@@ -5,9 +5,10 @@
 	"main": "lib/index.js",
 	"types": "src/index.ts",
 	"scripts": {
-		"build": "vite build",
-		"postinstall": "vite build",
-		"test": "tsx --test \"src/**/__test__/**/*.js\""
+		"build:zig": "zig build wasm -Doptimize=ReleaseSmall && node -e \"require('node:fs').copyFileSync('zig-out/lib/compiler.wasm','lib/compiler.wasm')\"",
+		"build": "vite build && zig build wasm -Doptimize=ReleaseSmall && node -e \"require('node:fs').copyFileSync('zig-out/lib/compiler.wasm','lib/compiler.wasm')\"",
+		"postinstall": "vite build && zig build wasm -Doptimize=ReleaseSmall && node -e \"require('node:fs').copyFileSync('zig-out/lib/compiler.wasm','lib/compiler.wasm')\"",
+		"test": "tsx --test \"src/__test__/**/*.js\""
 	},
 	"dependencies": {
 		"@wum/shared": "workspace:*"
